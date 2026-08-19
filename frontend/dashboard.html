@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Atlas Financeiro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-pie"></i>
+                <span>Atlas Financeiro</span>
+            </div>
+            <div class="nav-links">
+                <a href="dashboard.html" class="active">Dashboard</a>
+                <a href="lancamentos.html">Lançamentos</a>
+                <a href="faturas.html">Faturas</a>
+                <a href="energia.html">Energia</a>
+                <a href="grupos.html">Grupos</a>
+                <a href="contabilidade.html">Contabilidade</a>
+                <a href="#" onclick="logout(event)" class="btn btn-danger">Sair</a>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <div class="page-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p class="text-muted">Visão geral da sua saúde financeira</p>
+            </div>
+            <div class="user-info">
+                <span id="userName">Carregando...</span>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+
+        <!-- Cards de Resumo -->
+        <div class="dashboard-cards">
+            <div class="card dashboard-card">
+                <div class="card-icon"><i class="fas fa-wallet"></i></div>
+                <div class="card-content">
+                    <span class="card-label">Saldo Total</span>
+                    <span class="card-value" id="saldoTotal">R$ 0,00</span>
+                </div>
+            </div>
+            <div class="card dashboard-card success">
+                <div class="card-icon"><i class="fas fa-arrow-up"></i></div>
+                <div class="card-content">
+                    <span class="card-label">Receitas</span>
+                    <span class="card-value" id="totalReceitas">R$ 0,00</span>
+                </div>
+            </div>
+            <div class="card dashboard-card danger">
+                <div class="card-icon"><i class="fas fa-arrow-down"></i></div>
+                <div class="card-content">
+                    <span class="card-label">Despesas</span>
+                    <span class="card-value" id="totalDespesas">R$ 0,00</span>
+                </div>
+            </div>
+            <div class="card dashboard-card info">
+                <div class="card-icon"><i class="fas fa-file-invoice"></i></div>
+                <div class="card-content">
+                    <span class="card-label">Faturas Pendentes</span>
+                    <span class="card-value" id="faturasPendentes">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos e Mais -->
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Últimos Lançamentos</h3>
+                    <a href="lancamentos.html" class="btn btn-sm btn-outline">Ver todos</a>
+                </div>
+                <div class="card-body">
+                    <div id="ultimosLancamentos" class="lancamentos-list">
+                        <p class="text-muted">Carregando...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Resumo do Período</h3>
+                </div>
+                <div class="card-body">
+                    <div class="period-summary">
+                        <div class="summary-item">
+                            <span class="label">Este Mês</span>
+                            <div class="summary-values">
+                                <span class="value success" id="receitasMes">R$ 0,00</span>
+                                <span class="value danger" id="despesasMes">R$ 0,00</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Últimos 30 Dias</span>
+                            <div class="summary-values">
+                                <span class="value success" id="receitas30d">R$ 0,00</span>
+                                <span class="value danger" id="despesas30d">R$ 0,00</span>
+                            </div>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Últimos 90 Dias</span>
+                            <div class="summary-values">
+                                <span class="value success" id="receitas90d">R$ 0,00</span>
+                                <span class="value danger" id="despesas90d">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/utils.js"></script>
+</body>
+</html>

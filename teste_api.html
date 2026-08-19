@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste API - Lançamentos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .info-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 120px;
+        }
+
+        .value {
+            color: #212529;
+            word-break: break-all;
+        }
+
+        .value.token {
+            font-family: monospace;
+            font-size: 12px;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-success {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d68910;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+        }
+
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .output .log-info {
+            color: #4fc3f7;
+        }
+
+        .output .log-success {
+            color: #81c784;
+        }
+
+        .output .log-error {
+            color: #e57373;
+        }
+
+        .output .log-warning {
+            color: #ffd54f;
+        }
+
+        .output .log-data {
+            color: #ce93d8;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .config-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .config-section h4 {
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .config-section input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        .config-section input:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Teste API - Lançamentos</h1>
+        <p class="subtitle">Ferramenta de diagnóstico para verificar a conexão com a API</p>
+
+        <!-- Configuração da API -->
+        <div class="config-section">
+            <h4>⚙️ Configuração da API</h4>
+            <label>URL da API:</label>
+            <input type="text" id="apiUrlInput" value="http://localhost:8000/lancamentos/" />
+            <button class="btn btn-warning" onclick="atualizarUrl()" style="margin-top: 10px;">
+                Atualizar URL
+            </button>
+        </div>
+
+        <!-- Informações de Debug -->
+        <div class="info-card">
+            <h3>📋 Informações de Debug</h3>
+            <div class="info-item">
+                <span class="label">API URL:</span>
+                <span class="value" id="debugApiUrl">Carregando...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Token:</span>
+                <span class="value token" id="debugToken">Carregando...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Token Válido:</span>
+                <span class="value" id="debugTokenValido">Carregando...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Status:</span>
+                <span class="value" id="debugStatus">Aguardando teste...</span>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="testarAPI()">
+                🔍 Testar API
+            </button>
+            <button class="btn btn-success" onclick="testarCompleto()">
+                📊 Teste Completo
+            </button>
+            <button class="btn btn-danger" onclick="limparLog()">
+                🗑️ Limpar Log
+            </button>
+            <button class="btn btn-warning" onclick="simularToken()">
+                🔑 Simular Token
+            </button>
+        </div>
+
+        <!-- Output do Console -->
+        <div class="output" id="outputConsole">
+            <div class="log-info">📌 Aguardando ação...</div>
+            <div class="log-info">💡 Clique em "Testar API" para iniciar o diagnóstico</div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÕES GLOBAIS
+        // ============================================
+        let API_URL = localStorage.getItem('API_URL') || 'http://localhost:8000/lancamentos/';
+        let logCount = 0;
+
+        // ============================================
+        // FUNÇÕES DE LOG
+        // ============================================
+        function log(message, type = 'info') {
+            const output = document.getElementById('outputConsole');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            
+            const types = {
+                'info': 'log-info',
+                'success': 'log-success',
+                'error': 'log-error',
+                'warning': 'log-warning',
+                'data': 'log-data'
+            };
+            
+            logEntry.className = types[type] || 'log-info';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            output.appendChild(logEntry);
+            output.scrollTop = output.scrollHeight;
+            logCount++;
+        }
+
+        function limparLog() {
+            const output = document.getElementById('outputConsole');
+            output.innerHTML = '';
+            log('🗑️ Log limpo', 'warning');
+            log('💡 Pronto para novo teste', 'info');
+            logCount = 0;
+        }
+
+        // ============================================
+        // FUNÇÕES DE DEBUG
+        // ============================================
+        function atualizarDebug() {
+            const token = localStorage.getItem('token');
+            document.getElementById('debugApiUrl').textContent = API_URL;
+            document.getElementById('debugToken').textContent = token || '❌ Não encontrado';
+            
+            // Verifica se o token parece válido
+            const tokenValido = token && token.length > 10;
+            document.getElementById('debugTokenValido').innerHTML = tokenValido 
+                ? '<span class="status-badge success">✅ Válido</span>' 
+                : '<span class="status-badge error">❌ Inválido ou ausente</span>';
+        }
+
+        function atualizarUrl() {
+            const novaUrl = document.getElementById('apiUrlInput').value;
+            if (novaUrl) {
+                API_URL = novaUrl;
+                localStorage.setItem('API_URL', API_URL);
+                log(`🔗 URL atualizada para: ${API_URL}`, 'success');
+                atualizarDebug();
+            }
+        }
+
+        function simularToken() {
+            const tokenSimulado = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+            localStorage.setItem('token', tokenSimulado);
+            log('🔑 Token simulado adicionado ao localStorage', 'warning');
+            log(`📝 Token: ${tokenSimulado.substring(0, 30)}...`, 'data');
+            atualizarDebug();
+        }
+
+        // ============================================
+        // FUNÇÃO PRINCIPAL DE TESTE
+        // ============================================
+        async function testarAPI() {
+            try {
+                const token = localStorage.getItem('token');
+                const url = document.getElementById('apiUrlInput').value || API_URL;
+                
+                log('🚀 Iniciando teste da API...', 'info');
+                log(`📍 URL: ${url}`, 'info');
+                log(`🔑 Token: ${token ? '✅ Presente' : '❌ Ausente'}`, token ? 'success' : 'error');
+                
+                if (token) {
+                    log(`📝 Token (primeiros 30 caracteres): ${token.substring(0, 30)}...`, 'data');
+                }
+
+                // Atualiza status
+                document.getElementById('debugStatus').innerHTML = '<span class="loading"></span> Testando...';
+
+                // Faz a requisição
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : '',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                log(`📡 Status da resposta: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+
+                // Log dos headers
+                const headers = Object.fromEntries(response.headers);
+                log(`📋 Headers: ${JSON.stringify(headers, null, 2)}`, 'data');
+
+                // Atualiza status
+                document.getElementById('debugStatus').innerHTML = 
+                    `<span class="status-badge ${response.ok ? 'success' : 'error'}">
+                        ${response.status} - ${response.statusText}
+                    </span>`;
+
+                // Verifica se a resposta é OK
+                if (!response.ok) {
+                    const text = await response.text();
+                    log(`❌ Erro na resposta: ${text}`, 'error');
+                    
+                    // Dicas específicas por status
+                    if (response.status === 401) {
+                        log('💡 Token inválido ou expirado. Faça login novamente.', 'warning');
+                    } else if (response.status === 403) {
+                        log('💡 Sem permissão para acessar este recurso.', 'warning');
+                    } else if (response.status === 404) {
+                        log('💡 Rota não encontrada. Verifique a URL da API.', 'warning');
+                    } else if (response.status === 500) {
+                        log('💡 Erro interno no servidor. Verifique os logs do backend.', 'warning');
+                    }
+                    
+                    return null;
+                }
+
+                // Tenta parsear o JSON
+                const data = await response.json();
+                log(`✅ Lançamentos obtidos com sucesso! (${data.length || 0} registros)`, 'success');
+                log(`📊 Dados: ${JSON.stringify(data, null, 2)}`, 'data');
+                
+                return data;
+
+            } catch (error) {
+                log(`❌ Erro na requisição: ${error.message}`, 'error');
+                
+                // Diagnóstico de erro
+                if (error.message.includes('Failed to fetch')) {
+                    log('🔍 Diagnóstico de erro de conexão:', 'warning');
+                    log('  1️⃣ Verifique se a API está rodando', 'warning');
+                    log('  2️⃣ Confirme a URL: http://localhost:8000/lancamentos/', 'warning');
+                    log('  3️⃣ Verifique se o CORS está configurado', 'warning');
+                    log('  4️⃣ Teste com curl: curl http://localhost:8000/lancamentos/', 'warning');
+                    log('  5️⃣ Verifique firewall/antivírus', 'warning');
+                }
+                
+                document.getElementById('debugStatus').innerHTML = 
+                    '<span class="status-badge error">❌ Erro de conexão</span>';
+                
+                return null;
+            }
+        }
+
+        // ============================================
+        // TESTE COMPLETO COM MÚLTIPLAS VERIFICAÇÕES
+        // ============================================
+        async function testarCompleto() {
+            log('📊 Iniciando teste completo...', 'info');
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            
+            // 1. Verifica localStorage
+            log('📂 1. Verificando localStorage:', 'info');
+            const token = localStorage.getItem('token');
+            log(`   Token: ${token ? '✅ Encontrado' : '❌ Não encontrado'}`, token ? 'success' : 'error');
+            
+            // 2. Verifica URL
+            const url = document.getElementById('apiUrlInput').value || API_URL;
+            log(`📍 2. URL configurada: ${url}`, 'info');
+            
+            // 3. Testa a API
+            log('🔗 3. Testando conexão com a API...', 'info');
+            const resultado = await testarAPI();
+            
+            // 4. Resumo
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            if (resultado) {
+                log('✅ Teste completo finalizado com SUCESSO!', 'success');
+                log(`📊 Total de registros: ${resultado.length}`, 'data');
+            } else {
+                log('❌ Teste completo finalizado com ERROS!', 'error');
+                log('💡 Verifique as mensagens acima para diagnóstico.', 'warning');
+            }
+            
+            atualizarDebug();
+        }
+
+        // ============================================
+        // FUNÇÃO PARA VERIFICAR CORS
+        // ============================================
+        async function verificarCORS() {
+            try {
+                log('🌐 Verificando CORS...', 'info');
+                const response = await fetch(API_URL, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Access-Control-Request-Method': 'GET',
+                        'Access-Control-Request-Headers': 'authorization'
+                    }
+                });
+                
+                log(`📡 Resposta OPTIONS: ${response.status}`, 'info');
+                
+                const corsHeaders = {
+                    'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+                    'access-control-allow-methods': response.headers.get('access-control-allow-methods'),
+                    'access-control-allow-headers': response.headers.get('access-control-allow-headers')
+                };
+                
+                log(`📋 Headers CORS: ${JSON.stringify(corsHeaders, null, 2)}`, 'data');
+                
+                if (corsHeaders['access-control-allow-origin'] === '*') {
+                    log('✅ CORS configurado corretamente', 'success');
+                } else {
+                    log('⚠️ CORS pode estar restrito', 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao verificar CORS: ${error.message}`, 'error');
+            }
+        }
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Ferramenta de diagnóstico carregada', 'info');
+            log(`📍 URL atual: ${API_URL}`, 'info');
+            
+            // Carrega URL do input
+            document.getElementById('apiUrlInput').value = API_URL;
+            
+            // Atualiza debug
+            atualizarDebug();
+            
+            // Verifica se tem token
+            const token = localStorage.getItem('token');
+            if (token) {
+                log('✅ Token encontrado no localStorage', 'success');
+            } else {
+                log('⚠️ Nenhum token encontrado. Clique em "Simular Token" para testar.', 'warning');
+            }
+            
+            // Dicas iniciais
+            log('💡 Dicas:', 'info');
+            log('  • Clique em "Testar API" para fazer uma requisição', 'info');
+            log('  • Use "Simular Token" para criar um token de teste', 'info');
+            log('  • "Teste Completo" faz uma verificação detalhada', 'info');
+        });
+
+        // ============================================
+        // EXPORTA FUNÇÕES PARA O GLOBAL
+        // ============================================
+        window.testarAPI = testarAPI;
+        window.testarCompleto = testarCompleto;
+        window.limparLog = limparLog;
+        window.simularToken = simularToken;
+        window.atualizarUrl = atualizarUrl;
+        window.verificarCORS = verificarCORS;
+        window.atualizarDebug = atualizarDebug;
+
+        console.log('✅ Script carregado! Use as funções:');
+        console.log('  • testarAPI() - Teste básico');
+        console.log('  • testarCompleto() - Teste completo');
+        console.log('  • verificarCORS() - Verifica CORS');
+        console.log('  • simularToken() - Cria token de teste');
+    </script>
+</body>
+</html>

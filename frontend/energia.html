@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energia - Atlas Financeiro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-pie"></i>
+                <span>Atlas Financeiro</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Início</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="lancamentos.html">Lançamentos</a>
+                <a href="faturas.html">Faturas</a>
+                <a href="energia.html" class="active">Energia</a>
+                <a href="grupos.html">Grupos</a>
+                <a href="contabilidade.html">Contabilidade</a>
+                <a href="#" onclick="logout(event)" class="btn btn-danger">Sair</a>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <div class="page-header">
+            <div>
+                <h1><i class="fas fa-bolt"></i> Energia</h1>
+                <p class="text-muted">Gestão de contratos e faturas de energia</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="abrirModalContrato()">
+                    <i class="fas fa-plus"></i> Novo Contrato
+                </button>
+                <button class="btn btn-success" onclick="abrirModalFaturaEnergia()">
+                    <i class="fas fa-file-invoice"></i> Nova Fatura
+                </button>
+            </div>
+        </div>
+
+        <!-- Contratos -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Contratos de Energia</h3>
+            </div>
+            <div class="card-body">
+                <div id="contratosList" class="contratos-grid">
+                    <p class="text-muted">Carregando contratos...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Faturas de Energia -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Faturas de Energia</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Mês Referência</th>
+                                <th>Consumo (kWh)</th>
+                                <th>Valor Total</th>
+                                <th>Bandeira</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="faturasEnergiaTable">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Contrato -->
+    <div id="modalContrato" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Novo Contrato de Energia</h3>
+                <button class="modal-close" onclick="fecharModal('modalContrato')">&times;</button>
+            </div>
+            <form id="formContrato" onsubmit="salvarContrato(event)">
+                <div class="form-group">
+                    <label>Número do Contrato</label>
+                    <input type="text" id="contratoNumero" placeholder="Número do contrato" required>
+                </div>
+                <div class="form-group">
+                    <label>Concessionária</label>
+                    <input type="text" id="contratoConcessionaria" placeholder="Nome da concessionária" required>
+                </div>
+                <div class="form-group">
+                    <label>Unidade Consumidora</label>
+                    <input type="text" id="contratoUnidade" placeholder="Código da unidade" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Modalidade Tarifária</label>
+                        <select id="contratoModalidade" required>
+                            <option value="convencional">Convencional</option>
+                            <option value="branca">Branca</option>
+                            <option value="verde">Verde</option>
+                            <option value="azul">Azul</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tensão</label>
+                        <select id="contratoTensao" required>
+                            <option value="baixa">Baixa</option>
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data de Início</label>
+                        <input type="date" id="contratoDataInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Fim</label>
+                        <input type="date" id="contratoDataFim">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="fecharModal('modalContrato')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Fatura Energia -->
+    <div id="modalFaturaEnergia" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nova Fatura de Energia</h3>
+                <button class="modal-close" onclick="fecharModal('modalFaturaEnergia')">&times;</button>
+            </div>
+            <form id="formFaturaEnergia" onsubmit="salvarFaturaEnergia(event)">
+                <div class="form-group">
+                    <label>Contrato</label>
+                    <select id="faturaEnergiaContrato" required>
+                        <option value="">Selecione um contrato</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mês Referência</label>
+                    <input type="date" id="faturaEnergiaMes" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data Vencimento</label>
+                        <input type="date" id="faturaEnergiaVencimento" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Consumo (kWh)</label>
+                        <input type="number" id="faturaEnergiaConsumo" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Valor Total (R$)</label>
+                    <input type="number" id="faturaEnergiaValor" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Bandeira Tarifária</label>
+                    <select id="faturaEnergiaBandeira">
+                        <option value="">Selecione</option>
+                        <option value="verde">Verde</option>
+                        <option value="amarela">Amarela</option>
+                        <option value="vermelha1">Vermelha 1</option>
+                        <option value="vermelha2">Vermelha 2</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="fecharModal('modalFaturaEnergia')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/energia.js"></script>
+    <script src="js/utils.js"></script>
+</body>
+</html>

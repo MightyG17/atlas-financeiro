@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas Financeiro - Gestão Financeira</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-pie"></i>
+                <span>Atlas Financeiro</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="active">Início</a>
+                <a href="login.html" class="btn btn-primary">Entrar</a>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Gerencie suas <span>finanças</span> com inteligência</h1>
+                <p>Plataforma completa para gestão financeira pessoal e empresarial. Controle faturas, lançamentos, grupos de eventos e muito mais.</p>
+                <div class="hero-buttons">
+                    <a href="cadastro.html" class="btn btn-primary btn-lg">
+                        <i class="fas fa-rocket"></i> Começar Agora
+                    </a>
+                    <a href="#features" class="btn btn-outline btn-lg">
+                        <i class="fas fa-info-circle"></i> Saiba Mais
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%234f46e5' width='400' height='300' rx='20'/%3E%3Ctext x='50' y='150' font-family='Arial' font-size='24' fill='white'%3E📊 Atlas Financeiro%3C/text%3E%3Ctext x='50' y='190' font-family='Arial' font-size='16' fill='%23c7d2fe'%3EGestão Financeira Inteligente%3C/text%3E%3C/svg%3E" alt="Atlas Financeiro">
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Recursos <span>Principais</span></h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-wallet"></i></div>
+                    <h3>Gestão de Lançamentos</h3>
+                    <p>Controle todas suas receitas e despesas em um só lugar com categorização inteligente.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-file-invoice"></i></div>
+                    <h3>Faturas</h3>
+                    <p>Gerencie todas suas faturas com código de barras, vencimentos e status de pagamento.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                    <h3>Energia</h3>
+                    <p>Análise completa de consumo e custos de energia com histórico e projeções.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-users"></i></div>
+                    <h3>Grupos de Eventos</h3>
+                    <p>Crie grupos para eventos, divida despesas e acompanhe participações.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                    <h3>Contabilidade</h3>
+                    <p>Plano de contas completo e balanços para análise financeira detalhada.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Segurança</h3>
+                    <p>Autenticação JWT, criptografia de dados e total privacidade das informações.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Pronto para transformar sua gestão financeira?</h2>
+                <p>Cadastre-se gratuitamente e comece a utilizar todas as funcionalidades do Atlas Financeiro.</p>
+                <a href="cadastro.html" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus"></i> Criar Conta Gratuita
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Atlas Financeiro</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#features">Recursos</a>
+                    <a href="#">Sobre</a>
+                    <a href="#">Contato</a>
+                    <a href="#">Política de Privacidade</a>
+                </div>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Atlas Financeiro - Todos os direitos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleMobileMenu() {
+            const navLinks = document.querySelector('.nav-links');
+            navLinks.classList.toggle('active');
+        }
+
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', function(event) {
+            const nav = document.querySelector('.navbar .container');
+            const menu = document.querySelector('.nav-links');
+            const btn = document.querySelector('.mobile-menu-btn');
+            
+            if (!nav.contains(event.target) && menu.classList.contains('active')) {
+                menu.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

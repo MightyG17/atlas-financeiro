@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lançamentos - Atlas Financeiro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-pie"></i>
+                <span>Atlas Financeiro</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Início</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="lancamentos.html" class="active">Lançamentos</a>
+                <a href="faturas.html">Faturas</a>
+                <a href="energia.html">Energia</a>
+                <a href="grupos.html">Grupos</a>
+                <a href="contabilidade.html">Contabilidade</a>
+                <a href="#" onclick="logout(event)" class="btn btn-danger">Sair</a>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <div class="page-header">
+            <div>
+                <h1>Lançamentos</h1>
+                <p class="text-muted">Gerencie todas as suas receitas e despesas</p>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalLancamento()">
+                <i class="fas fa-plus"></i> Novo Lançamento
+            </button>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters-bar">
+            <div class="filters-group">
+                <select id="filterTipo" onchange="carregarLancamentos()">
+                    <option value="">Todos os tipos</option>
+                    <option value="receita">Receita</option>
+                    <option value="despesa">Despesa</option>
+                    <option value="transferencia">Transferência</option>
+                </select>
+                <select id="filterStatus" onchange="carregarLancamentos()">
+                    <option value="">Todos os status</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="pago">Pago</option>
+                    <option value="cancelado">Cancelado</option>
+                </select>
+                <input type="date" id="filterDataInicio" onchange="carregarLancamentos()">
+                <input type="date" id="filterDataFim" onchange="carregarLancamentos()">
+            </div>
+            <button class="btn btn-sm btn-outline" onclick="limparFiltros()">
+                <i class="fas fa-undo"></i> Limpar
+            </button>
+        </div>
+
+        <!-- Tabela de Lançamentos -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Tipo</th>
+                                <th>Categoria</th>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lancamentosTable">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="pagination">
+                    <!-- Será preenchido via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Novo Lançamento -->
+    <div id="modalLancamento" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Novo Lançamento</h3>
+                <button class="modal-close" onclick="fecharModal('modalLancamento')">&times;</button>
+            </div>
+            <form id="formLancamento" onsubmit="salvarLancamento(event)">
+                <input type="hidden" id="lancamentoId">
+                
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="lancamentoTipo" required>
+                        <option value="receita">Receita</option>
+                        <option value="despesa">Despesa</option>
+                        <option value="transferencia">Transferência</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <input type="text" id="lancamentoCategoria" placeholder="Ex: Alimentação, Salário..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="lancamentoDescricao" rows="2" placeholder="Descrição do lançamento"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="number" id="lancamentoValor" step="0.01" min="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="lancamentoData" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="lancamentoStatus">
+                        <option value="pendente">Pendente</option>
+                        <option value="pago">Pago</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="fecharModal('modalLancamento')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/lancamentos.js"></script>
+    <script src="js/utils.js"></script>
+</body>
+</html>

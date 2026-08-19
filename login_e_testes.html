@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Login + Teste API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+
+        .login-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .login-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #f56565;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(252, 129, 129, 0.4);
+        }
+
+        .btn-warning {
+            background: #f6ad55;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #ed8936;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(246, 173, 85, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .value {
+            color: #2c3e50;
+            word-break: break-all;
+            max-width: 60%;
+            text-align: right;
+        }
+
+        .value.token {
+            font-family: monospace;
+            font-size: 12px;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .output .log-info { color: #4fc3f7; }
+        .output .log-success { color: #81c784; }
+        .output .log-error { color: #e57373; }
+        .output .log-warning { color: #ffd54f; }
+        .output .log-data { color: #ce93d8; }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .value {
+                max-width: 100%;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Sistema de Login + API</h1>
+        <p class="subtitle">Faça login para obter um token válido e testar a API</p>
+
+        <!-- ALERTAS -->
+        <div id="alertContainer"></div>
+
+        <!-- SEÇÃO DE LOGIN -->
+        <div class="login-section">
+            <h3>🔑 Login</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Usuário</label>
+                    <input type="text" id="username" value="admin" placeholder="Digite seu usuário" />
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="password" value="admin123" placeholder="Digite sua senha" />
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="fazerLogin()">
+                🔐 Fazer Login
+            </button>
+            <button class="btn btn-outline" onclick="logout()" style="margin-left: 10px;">
+                🚪 Logout
+            </button>
+            <span style="margin-left: 15px; font-size: 13px; color: #7f8c8d;">
+                💡 Use admin/admin123 (ou as credenciais da sua API)
+            </span>
+        </div>
+
+        <!-- INFORMAÇÕES DE DEBUG -->
+        <div class="info-card">
+            <h3 style="margin-bottom: 15px;">📋 Status Atual</h3>
+            <div class="info-item">
+                <span class="label">🔗 URL da API:</span>
+                <span class="value" id="debugApiUrl">http://localhost:8000</span>
+            </div>
+            <div class="info-item">
+                <span class="label">🔑 Token JWT:</span>
+                <span class="value token" id="debugToken">Não logado</span>
+            </div>
+            <div class="info-item">
+                <span class="label">📊 Status:</span>
+                <span class="value" id="debugStatus">
+                    <span class="status-badge warning">⚠️ Aguardando login</span>
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="label">👤 Usuário:</span>
+                <span class="value" id="debugUser">-</span>
+            </div>
+        </div>
+
+        <!-- BOTÕES DE TESTE -->
+        <div class="btn-group">
+            <button class="btn btn-success" onclick="testarListarLancamentos()">
+                📋 Listar Lançamentos
+            </button>
+            <button class="btn btn-success" onclick="testarCriarLancamento()">
+                ➕ Criar Lançamento
+            </button>
+            <button class="btn btn-warning" onclick="testarCompleto()">
+                🔍 Teste Completo
+            </button>
+            <button class="btn btn-danger" onclick="limparLog()">
+                🗑️ Limpar Log
+            </button>
+        </div>
+
+        <!-- CONSOLE DE SAÍDA -->
+        <div class="output" id="outputConsole">
+            <div class="log-info">📌 Aguardando ação...</div>
+            <div class="log-info">💡 Faça login primeiro para obter um token válido</div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÕES
+        // ============================================
+        const API_BASE_URL = 'http://localhost:8000';
+        const LOGIN_URL = `${API_BASE_URL}/auth/login`;  // Ajuste conforme sua API
+        const LANCAMENTOS_URL = `${API_BASE_URL}/lancamentos/`;
+        
+        let tokenAtual = localStorage.getItem('token');
+        let logCount = 0;
+
+        // ============================================
+        // FUNÇÕES DE LOG
+        // ============================================
+        function log(message, type = 'info') {
+            const output = document.getElementById('outputConsole');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            
+            const types = {
+                'info': 'log-info',
+                'success': 'log-success',
+                'error': 'log-error',
+                'warning': 'log-warning',
+                'data': 'log-data'
+            };
+            
+            logEntry.className = types[type] || 'log-info';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            output.appendChild(logEntry);
+            output.scrollTop = output.scrollHeight;
+            logCount++;
+        }
+
+        function limparLog() {
+            const output = document.getElementById('outputConsole');
+            output.innerHTML = '';
+            log('🗑️ Log limpo', 'warning');
+            log('💡 Pronto para novos testes', 'info');
+            logCount = 0;
+        }
+
+        function mostrarAlerta(mensagem, tipo = 'info') {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo}`;
+            alert.textContent = mensagem;
+            container.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // ============================================
+        // FUNÇÕES DE AUTENTICAÇÃO
+        // ============================================
+        async function fazerLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                mostrarAlerta('⚠️ Preencha usuário e senha!', 'error');
+                return;
+            }
+
+            log(`🔐 Tentando login com usuário: ${username}`, 'info');
+
+            try {
+                const response = await fetch(LOGIN_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                log(`📡 Status do login: ${response.status}`, 
+                    response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    log(`❌ Erro no login: ${JSON.stringify(error)}`, 'error');
+                    mostrarAlerta(`❌ Login falhou: ${error.detail || 'Credenciais inválidas'}`, 'error');
+                    return;
+                }
+
+                const data = await response.json();
+                
+                // Tenta encontrar o token em diferentes formatos
+                const token = data.access_token || data.token || data.access;
+                
+                if (!token) {
+                    log('❌ Token não encontrado na resposta', 'error');
+                    log(`📊 Resposta: ${JSON.stringify(data)}`, 'data');
+                    mostrarAlerta('❌ Token não encontrado na resposta da API', 'error');
+                    return;
+                }
+
+                // Salva o token
+                localStorage.setItem('token', token);
+                tokenAtual = token;
+                
+                log('✅ Login realizado com sucesso!', 'success');
+                log(`📝 Token obtido: ${token.substring(0, 30)}...`, 'data');
+                
+                mostrarAlerta('✅ Login realizado com sucesso!', 'success');
+                
+                // Atualiza debug
+                atualizarDebug();
+                
+                // Testa a API automaticamente
+                await testarListarLancamentos();
+
+            } catch (error) {
+                log(`❌ Erro na requisição de login: ${error.message}`, 'error');
+                mostrarAlerta(`❌ Erro de conexão: ${error.message}`, 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            tokenAtual = null;
+            log('🚪 Logout realizado', 'warning');
+            mostrarAlerta('🚪 Logout realizado com sucesso', 'info');
+            atualizarDebug();
+            limparLog();
+        }
+
+        // ============================================
+        // FUNÇÕES DE TESTE DA API
+        // ============================================
+        async function testarListarLancamentos() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                log('❌ Nenhum token encontrado. Faça login primeiro.', 'error');
+                mostrarAlerta('❌ Faça login primeiro!', 'error');
+                return;
+            }
+
+            log('📋 Listando lançamentos...', 'info');
+
+            try {
+                const response = await fetch(LANCAMENTOS_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                log(`📡 Status: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`❌ Erro: ${errorText}`, 'error');
+                    
+                    if (response.status === 401) {
+                        log('💡 Token inválido ou expirado. Faça login novamente.', 'warning');
+                        mostrarAlerta('⚠️ Token inválido. Faça login novamente.', 'error');
+                    }
+                    return;
+                }
+
+                const data = await response.json();
+                log(`✅ Lançamentos carregados! (${data.length || 0} registros)`, 'success');
+                log(`📊 Dados: ${JSON.stringify(data, null, 2)}`, 'data');
+                
+                mostrarAlerta(`✅ ${data.length || 0} lançamentos carregados`, 'success');
+                atualizarDebug();
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                mostrarAlerta(`❌ Erro ao listar: ${error.message}`, 'error');
+            }
+        }
+
+        async function testarCriarLancamento() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                log('❌ Nenhum token encontrado. Faça login primeiro.', 'error');
+                mostrarAlerta('❌ Faça login primeiro!', 'error');
+                return;
+            }
+
+            const novoLancamento = {
+                descricao: `Teste ${new Date().toLocaleString()}`,
+                valor: Math.random() * 1000,
+                tipo: 'despesa',
+                data: new Date().toISOString().split('T')[0]
+            };
+
+            log('➕ Criando novo lançamento...', 'info');
+            log(`📝 Dados: ${JSON.stringify(novoLancamento)}`, 'data');
+
+            try {
+                const response = await fetch(LANCAMENTOS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(novoLancamento)
+                });
+
+                log(`📡 Status: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`❌ Erro: ${errorText}`, 'error');
+                    return;
+                }
+
+                const data = await response.json();
+                log('✅ Lançamento criado com sucesso!', 'success');
+                log(`📊 Resposta: ${JSON.stringify(data, null, 2)}`, 'data');
+                
+                mostrarAlerta('✅ Lançamento criado com sucesso!', 'success');
+                
+                // Lista novamente para ver o novo registro
+                await testarListarLancamentos();
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                mostrarAlerta(`❌ Erro ao criar: ${error.message}`, 'error');
+            }
+        }
+
+        // ============================================
+        // TESTE COMPLETO
+        // ============================================
+        async function testarCompleto() {
+            log('📊 Iniciando teste completo...', 'info');
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            
+            const token = localStorage.getItem('token');
+            
+            // 1. Verifica token
+            log('📂 1. Verificando token:', 'info');
+            if (token) {
+                log(`   ✅ Token encontrado (${token.length} caracteres)`, 'success');
+                log(`   📝 Prefixo: ${token.substring(0, 20)}...`, 'data');
+            } else {
+                log('   ❌ Nenhum token encontrado', 'error');
+                log('   💡 Clique em "Fazer Login" primeiro', 'warning');
+                log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+                return;
+            }
+
+            // 2. Testa listagem
+            log('📋 2. Testando listagem...', 'info');
+            await testarListarLancamentos();
+
+            // 3. Testa criação
+            log('➕ 3. Testando criação...', 'info');
+            await testarCriarLancamento();
+
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            log('✅ Teste completo finalizado!', 'success');
+        }
+
+        // ============================================
+        // FUNÇÕES DE DEBUG
+        // ============================================
+        function atualizarDebug() {
+            const token = localStorage.getItem('token');
+            
+            document.getElementById('debugApiUrl').textContent = API_BASE_URL;
+            
+            if (token) {
+                document.getElementById('debugToken').textContent = token.substring(0, 30) + '...';
+                document.getElementById('debugStatus').innerHTML = 
+                    '<span class="status-badge success">✅ Autenticado</span>';
+                document.getElementById('debugUser').textContent = 
+                    document.getElementById('username').value || 'Usuário';
+            } else {
+                document.getElementById('debugToken').textContent = 'Não logado';
+                document.getElementById('debugStatus').innerHTML = 
+                    '<span class="status-badge warning">⚠️ Não autenticado</span>';
+                document.getElementById('debugUser').textContent = '-';
+            }
+        }
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Sistema de Login + API carregado', 'info');
+            log(`📍 URL da API: ${API_BASE_URL}`, 'info');
+            
+            // Verifica token existente
+            const token = localStorage.getItem('token');
+            if (token) {
+                log('✅ Token encontrado no localStorage', 'success');
+                log(`📝 Token: ${token.substring(0, 30)}...`, 'data');
+                atualizarDebug();
+                mostrarAlerta('✅ Token encontrado. Pronto para testar!', 'success');
+            } else {
+                log('⚠️ Nenhum token encontrado. Faça login.', 'warning');
+                atualizarDebug();
+            }
+
+            // Tenta login automático se tiver credenciais padrão
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username && password && !token) {
+                log('💡 Clique em "Fazer Login" para autenticar', 'info');
+            }
+        });
+
+        // ============================================
+        // EXPORTA FUNÇÕES
+        // ============================================
+        window.fazerLogin = fazerLogin;
+        window.logout = logout;
+        window.testarListarLancamentos = testarListarLancamentos;
+        window.testarCriarLancamento = testarCriarLancamento;
+        window.testarCompleto = testarCompleto;
+        window.limparLog = limparLog;
+        window.atualizarDebug = atualizarDebug;
+
+        console.log('✅ Sistema carregado!');
+        console.log('  • fazerLogin() - Faz login');
+        console.log('  • testarListarLancamentos() - Lista lançamentos');
+        console.log('  • testarCriarLancamento() - Cria lançamento');
+        console.log('  • testarCompleto() - Teste completo');
+    </script>
+</body>
+</html>

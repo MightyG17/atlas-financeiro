@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grupos - Atlas Financeiro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-pie"></i>
+                <span>Atlas Financeiro</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Início</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="lancamentos.html">Lançamentos</a>
+                <a href="faturas.html">Faturas</a>
+                <a href="energia.html">Energia</a>
+                <a href="grupos.html" class="active">Grupos</a>
+                <a href="contabilidade.html">Contabilidade</a>
+                <a href="#" onclick="logout(event)" class="btn btn-danger">Sair</a>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <div class="page-header">
+            <div>
+                <h1><i class="fas fa-users"></i> Grupos de Eventos</h1>
+                <p class="text-muted">Organize eventos e divida despesas em grupo</p>
+            </div>
+            <button class="btn btn-primary" onclick="abrirModalGrupo()">
+                <i class="fas fa-plus"></i> Novo Grupo
+            </button>
+        </div>
+
+        <div class="grupos-grid" id="gruposGrid">
+            <p class="text-muted">Carregando grupos...</p>
+        </div>
+    </div>
+
+    <!-- Modal Grupo -->
+    <div id="modalGrupo" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Novo Grupo</h3>
+                <button class="modal-close" onclick="fecharModal('modalGrupo')">&times;</button>
+            </div>
+            <form id="formGrupo" onsubmit="salvarGrupo(event)">
+                <div class="form-group">
+                    <label>Nome do Grupo</label>
+                    <input type="text" id="grupoNome" placeholder="Ex: Viagem, Evento..." required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="grupoDescricao" rows="2" placeholder="Descreva o propósito do grupo"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data de Início</label>
+                        <input type="date" id="grupoDataInicio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Fim</label>
+                        <input type="date" id="grupoDataFim">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" onclick="fecharModal('modalGrupo')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar Grupo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/grupos.js"></script>
+    <script src="js/utils.js"></script>
+</body>
+</html>
