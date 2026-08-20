@@ -1,33 +1,30 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
 from app.database import engine, Base
+from app.routers import (
+    auth,
+    router_caixa,
+    router_faturas,
+    router_grupos,
+    router_energia,
+    lancamentos,
+    contabilidade,
+)
 
-# Importa todos os routers disponíveis
-from app.routers import auth
-from app.routers import router_caixa
-from app.routers import router_faturas
-from app.routers import router_grupos
-from app.routers import router_energia
-from app.routers import lancamentos
-from app.routers import contabilidade
-
-# Cria as tabelas no banco
+# 1. Cria as tabelas no banco de dados automaticamente
 Base.metadata.create_all(bind=engine)
 
+# 2. Instancia a aplicação ÚNICA
 app = FastAPI(
     title="Atlas Financeiro API",
     version="3.0.0",
-    description="Plataforma contábil de gestão financeira"
+    description="Plataforma contábil de gestão financeira",
 )
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 
-app = FastAPI()
-
-# Mapeia a pasta do frontend
-app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
-
-# CORS
+# 3. Configuração do CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,26 +33,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# REGISTRO DOS ROUTERS
+# 4. Mapeia a pasta do frontend apenas se ela existir no projeto
+if os.path.exists("frontend"):
+    app.mount(
+        "/frontend", StaticFiles(directory="frontend", html=True), name="frontend"
+    )
 
-# Autenticação
+# 5. Registro de Routers
 app.include_router(auth.router, prefix="/auth", tags=["Autenticação"])
-
-# Caixa, Faturas, Grupos, etc.
 app.include_router(router_caixa.router, prefix="/caixa", tags=["Caixa"])
 app.include_router(router_faturas.router, prefix="/faturas", tags=["Faturas"])
 app.include_router(router_grupos.router, prefix="/grupos", tags=["Grupos"])
-
-# Energia (com prefixo /api/v1/energia)
 app.include_router(router_energia.router)
+app.include_router(
+    lancamentos.router, prefix="/lancamentos", tags=["Lançamentos"]
+)
+app.include_router(
+    contabilidade.router, prefix="/contabilidade", tags=["Contabilidade"]
+)
 
-# Lançamentos e Contabilidade
-app.include_router(lancamentos.router, prefix="/lancamentos", tags=["Lançamentos"])
-app.include_router(contabilidade.router, prefix="/contabilidade", tags=["Contabilidade"])
 
+# 6. Rotas de teste e status
 @app.get("/")
 def root():
-    return {"message": "Atlas Financeiro API", "version": "3.0.0", "status": "online"}
+    return {
+        "message": "Atlas Financeiro API",
+        "version": "3.0.0",
+        "status": "online",
+    }
+
 
 @app.get("/health")
 def health():
