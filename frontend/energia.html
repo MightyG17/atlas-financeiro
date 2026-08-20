@@ -7,6 +7,65 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ESTILOS ESPECÍFICOS DA PÁGINA DE ENERGIA — mantém o tema do site */
+        .upload-section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
+        .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .upload-area:hover { border-color: #f7971e; background: #fef9f0; }
+        .upload-area .icon { font-size: 40px; }
+        .upload-area p { color: #666; margin: 8px 0; }
+        .upload-area input[type="file"] { display: none; }
+
+        .status-msg { padding: 12px 16px; border-radius: 8px; margin: 8px 0; display: flex; align-items: center; gap: 12px; }
+        .status-msg.sucesso { background: #d4edda; color: #155724; }
+        .status-msg.erro { background: #f8d7da; color: #721c24; }
+        .status-msg.info { background: #d1ecf1; color: #0c5460; }
+
+        .hidden { display: none !important; }
+        .vazio { text-align: center; color: #999; padding: 40px; }
+
+        .dados-extraidos-container { background: #f8f9fa; border-radius: 8px; padding: 20px; margin-top: 16px; border: 1px solid #e9ecef; display: none; }
+        .dados-extraidos-container h3 { margin-bottom: 16px; font-size: 16px; }
+        .dados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+        .dados-grid .campo { display: flex; flex-direction: column; }
+        .dados-grid .campo label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+        .dados-grid .campo input, .dados-grid .campo select, .dados-grid .campo textarea { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; background: white; }
+        .dados-grid .campo input:focus, .dados-grid .campo select:focus, .dados-grid .campo textarea:focus { outline: none; border-color: #f7971e; }
+        .dados-grid .campo.full { grid-column: 1 / -1; }
+
+        .fatura-row { border-bottom: 1px solid #eee; }
+        .fatura-row:last-child { border-bottom: none; }
+        .fatura-summary { display: flex; justify-content: space-between; align-items: center; padding: 12px; cursor: pointer; flex-wrap: wrap; gap: 8px; transition: background 0.2s; }
+        .fatura-summary:hover { background: #f9f9f9; }
+        .fatura-summary .mes { font-weight: 600; }
+        .fatura-summary .valor { font-weight: 700; color: #e74c3c; }
+        .fatura-summary .status { font-size: 12px; padding: 2px 10px; border-radius: 12px; }
+        .fatura-summary .status.pago { background: #d4edda; color: #155724; }
+        .fatura-summary .status.pendente { background: #fff3cd; color: #856404; }
+        .fatura-summary .status.vencido { background: #f8d7da; color: #721c24; }
+
+        .fatura-detalhes { display: none; padding: 16px 12px; background: #f8f9fa; border-top: 1px solid #e9ecef; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+        .fatura-detalhes.open { display: grid; }
+        .fatura-detalhes .campo { display: flex; flex-direction: column; }
+        .fatura-detalhes .campo label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+        .fatura-detalhes .campo input, .fatura-detalhes .campo select { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+        .fatura-detalhes .campo input:focus, .fatura-detalhes .campo select:focus { outline: none; border-color: #f7971e; }
+        .fatura-detalhes .acoes-detalhes { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; flex-wrap: wrap; }
+
+        .btn-salvar-fatura { padding: 8px 20px; background: #27ae60; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.3s; }
+        .btn-salvar-fatura:hover { background: #1e8449; }
+        .btn-atualizar-fatura { padding: 6px 14px; background: #f7971e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s; }
+        .btn-atualizar-fatura:hover { background: #d68910; }
+
+        @media (max-width: 768px) {
+            .dados-grid { grid-template-columns: 1fr; }
+            .fatura-detalhes { grid-template-columns: 1fr 1fr; }
+            .fatura-summary { flex-direction: column; align-items: stretch; gap: 4px; }
+        }
+        @media (max-width: 480px) {
+            .fatura-detalhes { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -35,19 +94,41 @@
         <div class="page-header">
             <div>
                 <h1><i class="fas fa-bolt"></i> Energia</h1>
-                <p class="text-muted">Gestão de contratos e faturas de energia</p>
+                <p class="text-muted">Gestão de contratos, faturas e upload de PDF</p>
             </div>
             <div>
                 <button class="btn btn-primary" onclick="abrirModalContrato()">
                     <i class="fas fa-plus"></i> Novo Contrato
                 </button>
-                <button class="btn btn-success" onclick="abrirModalFaturaEnergia()">
-                    <i class="fas fa-file-invoice"></i> Nova Fatura
-                </button>
             </div>
         </div>
 
-        <!-- Contratos -->
+        <!-- ÁREA DE UPLOAD DE PDF (NOVO!) -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-file-pdf"></i> Upload de Fatura PDF</h3>
+            </div>
+            <div class="card-body">
+                <div class="upload-section" style="margin:0; padding:0; box-shadow:none; background:transparent;">
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('pdfInput').click()">
+                        <div class="icon"><i class="fas fa-file-pdf" style="color:#e74c3c;"></i></div>
+                        <p>Arraste ou clique para enviar o PDF da fatura</p>
+                        <small>Arquivos suportados: PDF (máx. 10MB)</small>
+                        <input type="file" id="pdfInput" accept=".pdf" onchange="handleFileUpload(this.files[0])">
+                    </div>
+                    <div id="uploadStatus"></div>
+                    <div id="uploadActions" class="hidden" style="margin-top:16px; display:flex; gap:12px; flex-wrap:wrap;">
+                        <button class="btn-salvar-fatura" onclick="salvarFaturaEditada()">
+                            <i class="fas fa-save"></i> Salvar no Banco
+                        </button>
+                        <button class="btn btn-outline" onclick="cancelarUpload()">Cancelar</button>
+                    </div>
+                    <div id="dadosExtraidosContainer" class="dados-extraidos-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contratos (ORIGINAL) -->
         <div class="card">
             <div class="card-header">
                 <h3>Contratos de Energia</h3>
@@ -59,36 +140,25 @@
             </div>
         </div>
 
-        <!-- Faturas de Energia -->
+        <!-- LISTA DE FATURAS (NOVO + ORIGINAL) -->
         <div class="card">
             <div class="card-header">
-                <h3>Faturas de Energia</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3><i class="fas fa-list"></i> Faturas de Energia</h3>
+                    <button class="btn btn-sm btn-outline" onclick="carregarFaturas()">
+                        <i class="fas fa-sync-alt"></i> Atualizar
+                    </button>
+                </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Mês Referência</th>
-                                <th>Consumo (kWh)</th>
-                                <th>Valor Total</th>
-                                <th>Bandeira</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="faturasEnergiaTable">
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">Carregando...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div id="listaFaturas">
+                    <p class="text-muted text-center">Carregando faturas...</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Contrato -->
+    <!-- Modal Contrato (ORIGINAL) -->
     <div id="modalContrato" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -145,7 +215,7 @@
         </div>
     </div>
 
-    <!-- Modal Fatura Energia -->
+    <!-- Modal Fatura Energia (ORIGINAL — mantido) -->
     <div id="modalFaturaEnergia" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -199,5 +269,439 @@
     <script src="js/auth.js"></script>
     <script src="js/energia.js"></script>
     <script src="js/utils.js"></script>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO DA API
+        // ============================================
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000/api/v1' 
+            : '/api/v1';
+
+        let dadosExtraidos = null;
+        let faturasCache = [];
+
+        function getHeaders() {
+            return {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // ============================================
+        // UPLOAD DE PDF
+        // ============================================
+        function handleFileUpload(file) {
+            if (!file) return;
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                alert('❌ Envie um arquivo PDF.');
+                return;
+            }
+
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<div class="status-msg info"><i class="fas fa-spinner fa-spin"></i> Processando PDF... Aguarde.</div>';
+            document.getElementById('uploadActions').classList.add('hidden');
+            document.getElementById('dadosExtraidosContainer').style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', file);
+            const token = localStorage.getItem('token');
+
+            fetch(`${API_URL}/energia/upload-pdf`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error("Sessão expirada. Faça login novamente.");
+                }
+                if (!response.ok) {
+                    throw new Error(data.detail || data.mensagem || `Erro HTTP ${response.status}`);
+                }
+                return data;
+            })
+            .then(data => {
+                console.log("Resposta da API:", data);
+                const statusStr = String(data.status || '').toUpperCase();
+                const isSucesso = statusStr === 'SUCESSO' || statusStr === 'SUCCESS' || data.success === true;
+                const isParcial = statusStr === 'PARCIAL';
+                const dados = data.dados || data.data || data;
+
+                if (isSucesso || isParcial) {
+                    dadosExtraidos = dados;
+                    if (isSucesso) {
+                        statusDiv.innerHTML = `
+                            <div class="status-msg sucesso">
+                                <i class="fas fa-check-circle"></i>
+                                <div>
+                                    <strong>Dados extraídos com sucesso!</strong>
+                                    <p style="margin:4px 0 0; font-size:14px;">UC: ${dados.uc || 'N/A'} | Total: R$ ${(dados.valores?.valor_total || 0).toFixed(2)}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        statusDiv.innerHTML = `<div class="status-msg info"><i class="fas fa-info-circle"></i> ${data.mensagem || 'Dados extraídos parcialmente.'}</div>`;
+                    }
+                    document.getElementById('uploadActions').classList.remove('hidden');
+                    exibirDadosExtraidos(dados);
+                } else {
+                    const msgErro = data.mensagem || data.detail || data.error || 'Erro ao processar os dados do PDF.';
+                    statusDiv.innerHTML = `<div class="status-msg erro"><i class="fas fa-exclamation-circle"></i> ${msgErro}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error("Erro na requisição:", error);
+                statusDiv.innerHTML = `<div class="status-msg erro"><i class="fas fa-times-circle"></i> Erro: ${error.message}</div>`;
+            });
+        }
+
+        function cancelarUpload() {
+            document.getElementById('uploadStatus').innerHTML = '';
+            document.getElementById('uploadActions').classList.add('hidden');
+            document.getElementById('dadosExtraidosContainer').style.display = 'none';
+            document.getElementById('pdfInput').value = '';
+            dadosExtraidos = null;
+        }
+
+        // ============================================
+        // EXIBIR DADOS EXTRAÍDOS PARA REVISÃO
+        // ============================================
+        function exibirDadosExtraidos(dados) {
+            const container = document.getElementById('dadosExtraidosContainer');
+            const v = dados.valores || {};
+            const c = dados.consumo || {};
+            const l = dados.leituras || {};
+            const dt = dados.datas || {};
+
+            container.innerHTML = `
+                <h3><i class="fas fa-edit"></i> Revise e corrija os dados antes de salvar</h3>
+                <div class="dados-grid">
+                    <div class="campo"><label>UC</label><input id="edit_uc" value="${dados.uc || ''}"></div>
+                    <div class="campo"><label>Titular</label><input id="edit_titular" value="${dados.titular || ''}"></div>
+                    <div class="campo"><label>CPF</label><input id="edit_cpf" value="${dados.cpf || ''}"></div>
+                    <div class="campo"><label>Endereço</label><input id="edit_endereco" value="${dados.endereco || ''}"></div>
+                    <div class="campo"><label>Concessionária</label><input id="edit_concessionaria" value="${dados.concessionaria || ''}"></div>
+                    <div class="campo"><label>Data Emissão</label><input type="date" id="edit_data_emissao" value="${dt.data_emissao || ''}"></div>
+                    <div class="campo"><label>Data Vencimento</label><input type="date" id="edit_data_vencimento" value="${dt.data_vencimento || ''}"></div>
+                    <div class="campo"><label>Data Leitura Ant.</label><input type="date" id="edit_data_leitura_anterior" value="${dt.data_leitura_anterior || ''}"></div>
+                    <div class="campo"><label>Data Leitura Atual</label><input type="date" id="edit_data_leitura_atual" value="${dt.data_leitura_atual || ''}"></div>
+                    <div class="campo"><label>Leitura Ant. (kWh)</label><input type="number" id="edit_leitura_anterior" value="${l.leitura_anterior || 0}"></div>
+                    <div class="campo"><label>Leitura Atual (kWh)</label><input type="number" id="edit_leitura_atual" value="${l.leitura_atual || 0}"></div>
+                    <div class="campo"><label>Dias Faturamento</label><input type="number" id="edit_dias_faturamento" value="${l.dias_faturamento || 30}"></div>
+                    <div class="campo"><label>Consumo (kWh)</label><input type="number" id="edit_consumo_kwh" value="${c.consumo_kwh || 0}"></div>
+                    <div class="campo"><label>Energia Injetada (kWh)</label><input type="number" id="edit_energia_injetada" value="${c.energia_injetada || 0}"></div>
+                    <div class="campo"><label>Saldo Créditos</label><input type="number" step="0.01" id="edit_saldo_creditos" value="${c.saldo_creditos || 0}"></div>
+                    <div class="campo"><label>Valor Energia</label><input type="number" step="0.01" id="edit_valor_energia" value="${v.valor_energia || 0}"></div>
+                    <div class="campo"><label>ICMS</label><input type="number" step="0.01" id="edit_valor_icms" value="${v.valor_icms || 0}"></div>
+                    <div class="campo"><label>PIS</label><input type="number" step="0.01" id="edit_valor_pis" value="${v.valor_pis || 0}"></div>
+                    <div class="campo"><label>COFINS</label><input type="number" step="0.01" id="edit_valor_cofins" value="${v.valor_cofins || 0}"></div>
+                    <div class="campo"><label>Bandeira</label><input id="edit_bandeira" value="${v.bandeira || ''}"></div>
+                    <div class="campo"><label>Valor Bandeira</label><input type="number" step="0.01" id="edit_valor_bandeira" value="${v.valor_bandeira || 0}"></div>
+                    <div class="campo"><label>Multa</label><input type="number" step="0.01" id="edit_valor_multa" value="${v.valor_multa || 0}"></div>
+                    <div class="campo"><label>Juros</label><input type="number" step="0.01" id="edit_valor_juros" value="${v.valor_juros || 0}"></div>
+                    <div class="campo"><label>IPCA</label><input type="number" step="0.01" id="edit_valor_ipca" value="${v.valor_ipca || 0}"></div>
+                    <div class="campo"><label>Iluminação Pública</label><input type="number" step="0.01" id="edit_valor_iluminacao" value="${v.valor_iluminacao || 0}"></div>
+                    <div class="campo"><label>Desconto Social</label><input type="number" step="0.01" id="edit_desconto_social" value="${v.desconto_social || 0}"></div>
+                    <div class="campo"><label>Débitos Anteriores</label><input type="number" step="0.01" id="edit_debitos_anteriores" value="${v.debitos_anteriores || 0}"></div>
+                    <div class="campo"><label>Valor Total</label><input type="number" step="0.01" id="edit_valor_total" value="${v.valor_total || 0}"></div>
+                    <div class="campo"><label>Situação</label>
+                        <select id="edit_status">
+                            <option value="PENDENTE" ${v.situacao_pagamento === 'PENDENTE' ? 'selected' : ''}>PENDENTE</option>
+                            <option value="PAGO" ${v.situacao_pagamento === 'PAGO' ? 'selected' : ''}>PAGO</option>
+                            <option value="VENCIDO" ${v.situacao_pagamento === 'VENCIDO' ? 'selected' : ''}>VENCIDO</option>
+                        </select>
+                    </div>
+                    <div class="campo full"><label>Observação</label><textarea id="edit_observacao" rows="2">${dados.observacao || ''}</textarea></div>
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+
+        // ============================================
+        // SALVAR FATURA EDITADA
+        // ============================================
+        async function salvarFaturaEditada() {
+            if (!dadosExtraidos) {
+                alert('❌ Nenhum dado para salvar. Faça upload de um PDF primeiro.');
+                return;
+            }
+
+            const coletar = (id) => document.getElementById(id)?.value || '';
+            const coletarNum = (id) => parseFloat(document.getElementById(id)?.value) || 0;
+            const coletarInt = (id) => parseInt(document.getElementById(id)?.value) || 0;
+
+            const payload = {
+                uc: coletar('edit_uc'),
+                titular: coletar('edit_titular'),
+                cpf: coletar('edit_cpf'),
+                endereco: coletar('edit_endereco'),
+                concessionaria: coletar('edit_concessionaria'),
+                mes_referencia: (coletar('edit_data_emissao') || '').slice(0,7),
+                datas: {
+                    data_emissao: coletar('edit_data_emissao'),
+                    data_vencimento: coletar('edit_data_vencimento'),
+                    data_leitura_anterior: coletar('edit_data_leitura_anterior'),
+                    data_leitura_atual: coletar('edit_data_leitura_atual')
+                },
+                leituras: {
+                    leitura_anterior: coletarInt('edit_leitura_anterior'),
+                    leitura_atual: coletarInt('edit_leitura_atual'),
+                    dias_faturamento: coletarInt('edit_dias_faturamento')
+                },
+                consumo: {
+                    consumo_kwh: coletarInt('edit_consumo_kwh'),
+                    energia_injetada: coletarInt('edit_energia_injetada'),
+                    saldo_creditos: coletarNum('edit_saldo_creditos')
+                },
+                valores: {
+                    valor_energia: coletarNum('edit_valor_energia'),
+                    valor_pis: coletarNum('edit_valor_pis'),
+                    valor_cofins: coletarNum('edit_valor_cofins'),
+                    valor_icms: coletarNum('edit_valor_icms'),
+                    valor_bandeira: coletarNum('edit_valor_bandeira'),
+                    valor_multa: coletarNum('edit_valor_multa'),
+                    valor_juros: coletarNum('edit_valor_juros'),
+                    valor_ipca: coletarNum('edit_valor_ipca'),
+                    valor_iluminacao: coletarNum('edit_valor_iluminacao'),
+                    desconto_social: coletarNum('edit_desconto_social'),
+                    debitos_anteriores: coletarNum('edit_debitos_anteriores'),
+                    valor_total: coletarNum('edit_valor_total'),
+                    bandeira: coletar('edit_bandeira'),
+                    situacao_pagamento: coletar('edit_status')
+                },
+                observacao: coletar('edit_observacao') || 'Importado via PDF'
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/energia/salvar-fatura`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('✅ Fatura salva com sucesso!');
+                    cancelarUpload();
+                    carregarFaturas();
+                } else {
+                    alert('❌ Erro: ' + (data.detail || data.mensagem || 'Erro desconhecido ao salvar.'));
+                }
+            } catch (error) {
+                alert('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        // ============================================
+        // CARREGAR LISTA DE FATURAS
+        // ============================================
+        async function carregarFaturas() {
+            const container = document.getElementById('listaFaturas');
+            container.innerHTML = '<p class="text-muted text-center"><i class="fas fa-spinner fa-spin"></i> Carregando faturas...</p>';
+
+            try {
+                const response = await fetch(`${API_URL}/energia/faturas`, { headers: getHeaders() });
+                if (!response.ok) throw new Error('Erro ao carregar lista de faturas.');
+                const faturas = await response.json();
+                faturasCache = faturas;
+
+                if (!Array.isArray(faturas) || faturas.length === 0) {
+                    container.innerHTML = `
+                        <div class="vazio">
+                            <div style="font-size:40px;">📭</div>
+                            <p>Nenhuma fatura encontrada.</p>
+                            <p style="font-size:13px;">Faça upload de uma conta de luz para começar.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                faturas.sort((a, b) => (b.mes_referencia || '').localeCompare(a.mes_referencia || ''));
+
+                faturas.forEach(f => {
+                    const statusClass = f.status === 'PAGO' ? 'pago' : (f.status === 'VENCIDO' ? 'vencido' : 'pendente');
+                    const statusLabel = f.status === 'PAGO' ? '✅ Pago' : (f.status === 'VENCIDO' ? '⚠️ Vencido' : '⏳ Pendente');
+                    const temPdf = !!f.pdf_anexo;
+                    const valorTotal = typeof f.valor_total === 'number' ? f.valor_total.toFixed(2) : parseFloat(f.valor_total || 0).toFixed(2);
+
+                    html += `
+                        <div class="fatura-row" data-id="${f.id}">
+                            <div class="fatura-summary" onclick="toggleDetalhes(${f.id})">
+                                <span class="mes">📅 ${f.mes_referencia || 'N/A'}</span>
+                                <span class="valor">R$ ${valorTotal}</span>
+                                <span class="status ${statusClass}">${statusLabel}</span>
+                                <span>⚡ ${f.consumo_kwh || 0} kWh</span>
+                                <span style="font-size:12px; color:#888;">☀️ ${f.energia_injetada || 0} kWh</span>
+                                <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                                    ${temPdf ? `<button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); visualizarPDF(${f.id})" title="Ver PDF">📄</button>` : ''}
+                                    <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); toggleDetalhes(${f.id})" title="Editar">✏️</button>
+                                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deletarFatura(${f.id})" title="Excluir">🗑️</button>
+                                    <span style="font-size:12px; color:#888; cursor:pointer;">▼</span>
+                                </div>
+                            </div>
+                            <div class="fatura-detalhes" id="detalhes-${f.id}"></div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<div class="vazio">❌ Erro ao carregar faturas</div>`;
+            }
+        }
+
+        // ============================================
+        // VISUALIZAR PDF
+        // ============================================
+        function visualizarPDF(id) {
+            const fatura = faturasCache.find(f => f.id === id);
+            if (fatura && fatura.pdf_anexo) {
+                window.open(`/${fatura.pdf_anexo}`, '_blank');
+            } else {
+                alert('PDF não disponível para esta fatura.');
+            }
+        }
+
+        // ============================================
+        // ABRIR/FECHAR DETALHES PARA EDIÇÃO
+        // ============================================
+        async function toggleDetalhes(id) {
+            const detalhesDiv = document.getElementById(`detalhes-${id}`);
+            if (detalhesDiv.classList.contains('open')) {
+                detalhesDiv.classList.remove('open');
+                return;
+            }
+
+            const fatura = faturasCache.find(f => f.id === id);
+            if (!fatura) return;
+
+            const campos = [
+                { label: 'Mês Ref', key: 'mes_referencia', type: 'text' },
+                { label: 'Data Emissão', key: 'data_emissao', type: 'date' },
+                { label: 'Data Vencimento', key: 'data_vencimento', type: 'date' },
+                { label: 'Data Leitura Ant.', key: 'data_leitura_anterior', type: 'date' },
+                { label: 'Data Leitura At.', key: 'data_leitura_atual', type: 'date' },
+                { label: 'Dias Fat.', key: 'dias_faturamento', type: 'number' },
+                { label: 'Leitura Ant. (kWh)', key: 'leitura_anterior', type: 'number' },
+                { label: 'Leitura At. (kWh)', key: 'leitura_atual', type: 'number' },
+                { label: 'Consumo (kWh)', key: 'consumo_kwh', type: 'number' },
+                { label: 'Injetado (kWh)', key: 'energia_injetada', type: 'number' },
+                { label: 'Saldo Créditos', key: 'saldo_creditos', type: 'number' },
+                { label: 'Valor Energia', key: 'valor_energia', type: 'number' },
+                { label: 'ICMS', key: 'valor_icms', type: 'number' },
+                { label: 'PIS', key: 'valor_pis', type: 'number' },
+                { label: 'COFINS', key: 'valor_cofins', type: 'number' },
+                { label: 'Bandeira', key: 'bandeira', type: 'text' },
+                { label: 'Valor Bandeira', key: 'valor_bandeira', type: 'number' },
+                { label: 'Multa', key: 'valor_multa', type: 'number' },
+                { label: 'Juros', key: 'valor_juros', type: 'number' },
+                { label: 'IPCA', key: 'valor_ipca', type: 'number' },
+                { label: 'Iluminação Pública', key: 'valor_iluminacao', type: 'number' },
+                { label: 'Desconto Social', key: 'desconto_social', type: 'number' },
+                { label: 'Débitos Ant.', key: 'debitos_anteriores', type: 'number' },
+                { label: 'Valor Total', key: 'valor_total', type: 'number' },
+                { label: 'Status', key: 'status', type: 'select', options: ['PENDENTE', 'PAGO', 'VENCIDO'] }
+            ];
+
+            let html = '';
+            campos.forEach(c => {
+                const value = fatura[c.key] !== undefined && fatura[c.key] !== null ? fatura[c.key] : '';
+                let input = '';
+                if (c.type === 'select') {
+                    input = `<select id="edit_${c.key}_${id}">${c.options.map(o => `<option value="${o}" ${o === value ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
+                } else {
+                    input = `<input type="${c.type}" id="edit_${c.key}_${id}" value="${value}" step="0.01" />`;
+                }
+                html += `<div class="campo"><label>${c.label}</label>${input}</div>`;
+            });
+
+            html += `
+                <div class="acoes-detalhes">
+                    <button class="btn-atualizar-fatura" onclick="atualizarFatura(${id})">💾 Atualizar</button>
+                    <button class="btn btn-outline" onclick="toggleDetalhes(${id})">✖️ Fechar</button>
+                </div>
+            `;
+
+            detalhesDiv.innerHTML = html;
+            detalhesDiv.classList.add('open');
+        }
+
+        // ============================================
+        // ATUALIZAR FATURA
+        // ============================================
+        async function atualizarFatura(id) {
+            const campos = [
+                'mes_referencia', 'data_emissao', 'data_vencimento', 'data_leitura_anterior', 'data_leitura_atual',
+                'dias_faturamento', 'leitura_anterior', 'leitura_atual', 'consumo_kwh', 'energia_injetada',
+                'saldo_creditos', 'valor_energia', 'valor_icms', 'valor_pis', 'valor_cofins', 'bandeira',
+                'valor_bandeira', 'valor_multa', 'valor_juros', 'valor_ipca', 'valor_iluminacao',
+                'desconto_social', 'debitos_anteriores', 'valor_total', 'status'
+            ];
+
+            const dados = {};
+            campos.forEach(key => {
+                const el = document.getElementById(`edit_${key}_${id}`);
+                if (el) {
+                    const val = el.value.trim();
+                    dados[key] = el.type === 'number' ? (parseFloat(val) || 0) : val;
+                }
+            });
+
+            try {
+                const response = await fetch(`${API_URL}/energia/faturas/${id}`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify(dados)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('✅ Fatura atualizada!');
+                    carregarFaturas();
+                } else {
+                    alert('❌ Erro: ' + (data.detail || data.mensagem || 'Erro desconhecido.'));
+                }
+            } catch (error) {
+                alert('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        // ============================================
+        // EXCLUIR FATURA
+        // ============================================
+        async function deletarFatura(id) {
+            if (!confirm('⚠️ Tem certeza que deseja excluir esta fatura?')) return;
+            try {
+                const response = await fetch(`${API_URL}/energia/faturas/${id}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                if (response.ok) {
+                    alert('✅ Fatura excluída!');
+                    carregarFaturas();
+                } else {
+                    const err = await response.json();
+                    alert('❌ Erro: ' + (err.detail || err.mensagem || 'Erro ao excluir.'));
+                }
+            } catch (error) {
+                alert('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        // ============================================
+        // INICIALIZAR
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarFaturas();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.fatura-detalhes.open').forEach(el => el.classList.remove('open'));
+            }
+        });
+    </script>
 </body>
 </html>
