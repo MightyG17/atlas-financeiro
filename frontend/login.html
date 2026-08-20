@@ -62,45 +62,52 @@
 
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
-    <script>
-        function togglePassword() {
-            const password = document.getElementById('password');
-            const icon = document.getElementById('eyeIcon');
-            
-            if (password.type === 'password') {
-                password.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                password.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const loginForm = document.getElementById('loginForm'); // Garanta que a tag <form id="loginForm"> tem esse ID
 
-        async function handleLogin(event) {
-            event.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorEl = document.getElementById('loginError');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (event) => {
+                // 1. OBRIGATÓRIO: Impede a página de atualizar no submit
+                event.preventDefault();
 
-            errorEl.style.display = 'none';
+                // Captura os valores dos campos
+                const emailInput = document.getElementById('email');
+                const passwordInput = document.getElementById('password') || document.getElementById('senha');
+                const errorAlert = document.getElementById('errorMessage') || document.getElementById('loginError');
 
-            try {
-                const response = await login(email, password);
-                
-                if (response.success) {
-                    window.location.href = 'dashboard.html';
-                } else {
-                    errorEl.textContent = response.message || 'Credenciais inválidas.';
-                    errorEl.style.display = 'block';
+                const email = emailInput ? emailInput.value : '';
+                const password = passwordInput ? passwordInput.value : '';
+
+                // Oculta mensagens de erro anteriores
+                if (errorAlert) errorAlert.style.display = 'none';
+
+                try {
+                    // Chama a função login do api.js
+                    const result = await window.api.login(email, password);
+
+                    if (result.success) {
+                        // Sucesso: Redireciona para a página principal
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        // Exibe a mensagem de erro retornada pela API (ex: "E-mail ou senha incorretos")
+                        if (errorAlert) {
+                            errorAlert.textContent = result.message || 'Falha ao realizar login.';
+                            errorAlert.style.display = 'block';
+                        } else {
+                            alert(result.message || 'Falha ao realizar login.');
+                        }
+                    }
+                } catch (err) {
+                    console.error('Erro na autenticação:', err);
+                    if (errorAlert) {
+                        errorAlert.textContent = 'Erro ao se conectar com o servidor.';
+                        errorAlert.style.display = 'block';
+                    }
                 }
-            } catch (error) {
-                errorEl.textContent = 'Erro ao conectar ao servidor. Tente novamente.';
-                errorEl.style.display = 'block';
-            }
+            });
         }
-    </script>
+    });
+</script>
 </body>
 </html>
