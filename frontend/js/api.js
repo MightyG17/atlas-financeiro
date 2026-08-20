@@ -1,5 +1,6 @@
-// API Configuration
-const API_BASE_URL = 'http://localhost:8000';
+// Detecta dinamicamente a URL correta (Local vs Render)
+const API_BASE_URL = 'https://atlas-financeiro-4hk9.onrender.com';
+
 let authToken = localStorage.getItem('authToken');
 
 // Helper para requisições
@@ -7,6 +8,7 @@ async function apiRequest(endpoint, method = 'GET', body = null, requiresAuth = 
     const url = `${API_BASE_URL}${endpoint}`;
     const headers = {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
     };
 
     if (requiresAuth) {
