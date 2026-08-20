@@ -85,17 +85,19 @@
             const password = document.getElementById('password').value;
             const errorEl = document.getElementById('loginError');
 
+            errorEl.style.display = 'none';
+
             try {
                 const response = await login(email, password);
                 
                 if (response.success) {
                     window.location.href = 'dashboard.html';
                 } else {
-                    errorEl.textContent = response.message || 'Erro ao fazer login';
+                    errorEl.textContent = response.message || 'Credenciais inválidas.';
                     errorEl.style.display = 'block';
                 }
             } catch (error) {
-                errorEl.textContent = 'Erro de conexão. Verifique sua internet.';
+                errorEl.textContent = 'Erro ao conectar ao servidor. Tente novamente.';
                 errorEl.style.display = 'block';
             }
         }

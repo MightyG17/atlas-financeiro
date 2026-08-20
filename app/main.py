@@ -24,22 +24,32 @@ app = FastAPI(
     description="Plataforma contábil de gestão financeira",
 )
 
-# 3. Configuração do CORS
+# 3. Lista de origens permitidas (Substitui o "*" para evitar bloqueio do navegador)
+origins = [
+    "https://atlas-financeiro-4hk9.onrender.com",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost:5500",  # Para quando rodar com Live Server local
+]
+
+# 4. Configuração estrita do CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.onrender\.com", # Permite qualquer subdomínio do Render
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
-# 4. Mapeia a pasta do frontend apenas se ela existir no projeto
+# 5. Mapeia a pasta do frontend apenas se ela existir no projeto
 if os.path.exists("frontend"):
     app.mount(
         "/frontend", StaticFiles(directory="frontend", html=True), name="frontend"
     )
 
-# 5. Registro de Routers
+# 6. Registro de Routers
 app.include_router(auth.router, prefix="/auth", tags=["Autenticação"])
 app.include_router(router_caixa.router, prefix="/caixa", tags=["Caixa"])
 app.include_router(router_faturas.router, prefix="/faturas", tags=["Faturas"])
@@ -53,7 +63,7 @@ app.include_router(
 )
 
 
-# 6. Rotas de teste e status
+# 7. Rotas de teste e status
 @app.get("/")
 def root():
     return {
