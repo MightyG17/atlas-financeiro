@@ -1,7 +1,11 @@
 // Detecta dinamicamente a URL correta (Local vs Render)
-const API_BASE_URL = 'https://atlas-financeiro-4hk9.onrender.com';
 
-let authToken = localStorage.getItem('authToken');
+const isLocal = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1');
+
+// Se for local usa o servidor do XAMPP/FastAPI local; senão usa a API no Render
+const API_BASE_URL = isLocal 
+    ? 'http://localhost:8000' 
+    : 'https://atlas-financeiro-4hk9.onrender.com';
 
 // Helper para requisições
 async function apiRequest(endpoint, method = 'GET', body = null, requiresAuth = true) {
