@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ESTILOS ESPECÍFICOS DA PÁGINA DE ENERGIA — mantém o tema do site */
         .upload-section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
         .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; }
         .upload-area:hover { border-color: #f7971e; background: #fef9f0; }
@@ -29,8 +28,8 @@
         .dados-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
         .dados-grid .campo { display: flex; flex-direction: column; }
         .dados-grid .campo label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
-        .dados-grid .campo input, .dados-grid .campo select, .dados-grid .campo textarea { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; background: white; }
-        .dados-grid .campo input:focus, .dados-grid .campo select:focus, .dados-grid .campo textarea:focus { outline: none; border-color: #f7971e; }
+        .dados-grid .campo input, .dados-grid .campo select { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; background: white; }
+        .dados-grid .campo input:focus, .dados-grid .campo select:focus { outline: none; border-color: #f7971e; }
         .dados-grid .campo.full { grid-column: 1 / -1; }
 
         .fatura-row { border-bottom: 1px solid #eee; }
@@ -100,10 +99,13 @@
                 <button class="btn btn-primary" onclick="abrirModalContrato()">
                     <i class="fas fa-plus"></i> Novo Contrato
                 </button>
+                <button class="btn btn-success" onclick="abrirModalFaturaEnergia()">
+                    <i class="fas fa-file-invoice"></i> Nova Fatura
+                </button>
             </div>
         </div>
 
-        <!-- ÁREA DE UPLOAD DE PDF (NOVO!) -->
+        <!-- ÁREA DE UPLOAD DE PDF -->
         <div class="card">
             <div class="card-header">
                 <h3><i class="fas fa-file-pdf"></i> Upload de Fatura PDF</h3>
@@ -119,7 +121,7 @@
                     <div id="uploadStatus"></div>
                     <div id="uploadActions" class="hidden" style="margin-top:16px; display:flex; gap:12px; flex-wrap:wrap;">
                         <button class="btn-salvar-fatura" onclick="salvarFaturaEditada()">
-                            <i class="fas fa-save"></i> Salvar no Banco
+                            <i class="fas fa-save"></i> Salvar Fatura
                         </button>
                         <button class="btn btn-outline" onclick="cancelarUpload()">Cancelar</button>
                     </div>
@@ -128,7 +130,7 @@
             </div>
         </div>
 
-        <!-- Contratos (ORIGINAL) -->
+        <!-- Contratos -->
         <div class="card">
             <div class="card-header">
                 <h3>Contratos de Energia</h3>
@@ -140,11 +142,11 @@
             </div>
         </div>
 
-        <!-- LISTA DE FATURAS (NOVO + ORIGINAL) -->
+        <!-- LISTA DE FATURAS -->
         <div class="card">
             <div class="card-header">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3><i class="fas fa-list"></i> Faturas de Energia</h3>
+                    <h3>Faturas de Energia</h3>
                     <button class="btn btn-sm btn-outline" onclick="carregarFaturas()">
                         <i class="fas fa-sync-alt"></i> Atualizar
                     </button>
@@ -158,7 +160,7 @@
         </div>
     </div>
 
-    <!-- Modal Contrato (ORIGINAL) -->
+    <!-- Modal Contrato -->
     <div id="modalContrato" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -215,7 +217,7 @@
         </div>
     </div>
 
-    <!-- Modal Fatura Energia (ORIGINAL — mantido) -->
+    <!-- Modal Fatura Energia -->
     <div id="modalFaturaEnergia" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -272,7 +274,7 @@
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO DA API
+        // CONFIGURAÇÃO DA API — funciona local e no Render
         // ============================================
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:8000/api/v1' 
@@ -289,7 +291,113 @@
         }
 
         // ============================================
-        // UPLOAD DE PDF
+        // CARREGAR CONTRATOS
+        // ============================================
+        async function carregarContratos() {
+            const container = document.getElementById('contratosList');
+            try {
+                const response = await fetch(`${API_URL}/energia/contratos`, { headers: getHeaders() });
+                if (!response.ok) throw new Error('Erro ao carregar contratos');
+                const contratos = await response.json();
+                
+                const select = document.getElementById('faturaEnergiaContrato');
+                select.innerHTML = '<option value="">Selecione um contrato</option>';
+                contratos.forEach(c => {
+                    select.innerHTML += `<option value="${c.id}">${c.numero_contrato} - ${c.concessionaria}</option>`;
+                });
+
+                if (contratos.length === 0) {
+                    container.innerHTML = '<p class="text-muted">Nenhum contrato cadastrado.</p>';
+                } else {
+                    container.innerHTML = contratos.map(c => `
+                        <div style="border:1px solid #ddd; border-radius:8px; padding:16px;">
+                            <h4 style="margin:0 0 8px 0;">${c.concessionaria}</h4>
+                            <p style="margin:4px 0;"><strong>Nº:</strong> ${c.numero_contrato}</p>
+                            <p style="margin:4px 0;"><strong>UC:</strong> ${c.unidade_consumidora}</p>
+                            <p style="margin:4px 0;"><strong>Modalidade:</strong> ${c.modalidade_tarifaria} | ${c.tensão}</p>
+                            <p style="margin:4px 0; color:#666; font-size:13px;">Desde: ${new Date(c.data_inicio).toLocaleDateString()}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                container.innerHTML = `<p class="text-muted">Erro ao carregar contratos.</p>`;
+                console.error(error);
+            }
+        }
+
+        // ============================================
+        // SALVAR CONTRATO
+        // ============================================
+        async function salvarContrato(event) {
+            event.preventDefault();
+            const dados = {
+                numero_contrato: document.getElementById('contratoNumero').value,
+                concessionaria: document.getElementById('contratoConcessionaria').value,
+                unidade_consumidora: document.getElementById('contratoUnidade').value,
+                modalidade_tarifaria: document.getElementById('contratoModalidade').value,
+                tensao: document.getElementById('contratoTensao').value,
+                data_inicio: document.getElementById('contratoDataInicio').value,
+                data_fim: document.getElementById('contratoDataFim').value || null
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/energia/contratos`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(dados)
+                });
+                const ret = await res.json();
+                if (res.ok) {
+                    alert('✅ Contrato salvo!');
+                    fecharModal('modalContrato');
+                    document.getElementById('formContrato').reset();
+                    carregarContratos();
+                } else {
+                    alert('❌ Erro: ' + (ret.detail || 'Erro ao salvar'));
+                }
+            } catch (e) {
+                alert('❌ Erro de conexão');
+            }
+        }
+
+        // ============================================
+        // SALVAR FATURA MANUAL (modal)
+        // ============================================
+        async function salvarFaturaEnergia(event) {
+            event.preventDefault();
+            const mes = document.getElementById('faturaEnergiaMes').value;
+            const dados = {
+                contrato_id: parseInt(document.getElementById('faturaEnergiaContrato').value),
+                mes_referencia: mes,
+                data_vencimento: document.getElementById('faturaEnergiaVencimento').value,
+                consumo_kwh: parseFloat(document.getElementById('faturaEnergiaConsumo').value),
+                valor_total: parseFloat(document.getElementById('faturaEnergiaValor').value),
+                bandeira_ativa: document.getElementById('faturaEnergiaBandeira').value || null,
+                status: 'pendente'
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/energia/faturas`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(dados)
+                });
+                const ret = await res.json();
+                if (res.ok) {
+                    alert('✅ Fatura salva!');
+                    fecharModal('modalFaturaEnergia');
+                    document.getElementById('formFaturaEnergia').reset();
+                    carregarFaturas();
+                } else {
+                    alert('❌ Erro: ' + (ret.detail || 'Erro ao salvar'));
+                }
+            } catch (e) {
+                alert('❌ Erro de conexão');
+            }
+        }
+
+        // ============================================
+        // UPLOAD DE PDF — adaptado ao backend existente
         // ============================================
         function handleFileUpload(file) {
             if (!file) return;
@@ -299,62 +407,13 @@
             }
 
             const statusDiv = document.getElementById('uploadStatus');
-            statusDiv.innerHTML = '<div class="status-msg info"><i class="fas fa-spinner fa-spin"></i> Processando PDF... Aguarde.</div>';
+            statusDiv.innerHTML = '<div class="status-msg info"><i class="fas fa-spinner fa-spin"></i> Processando PDF... Selecione um contrato abaixo e clique em Salvar.</div>';
             document.getElementById('uploadActions').classList.add('hidden');
             document.getElementById('dadosExtraidosContainer').style.display = 'none';
 
-            const formData = new FormData();
-            formData.append('file', file);
-            const token = localStorage.getItem('token');
-
-            fetch(`${API_URL}/energia/upload-pdf`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            })
-            .then(async response => {
-                const data = await response.json();
-                if (response.status === 401 || response.status === 403) {
-                    throw new Error("Sessão expirada. Faça login novamente.");
-                }
-                if (!response.ok) {
-                    throw new Error(data.detail || data.mensagem || `Erro HTTP ${response.status}`);
-                }
-                return data;
-            })
-            .then(data => {
-                console.log("Resposta da API:", data);
-                const statusStr = String(data.status || '').toUpperCase();
-                const isSucesso = statusStr === 'SUCESSO' || statusStr === 'SUCCESS' || data.success === true;
-                const isParcial = statusStr === 'PARCIAL';
-                const dados = data.dados || data.data || data;
-
-                if (isSucesso || isParcial) {
-                    dadosExtraidos = dados;
-                    if (isSucesso) {
-                        statusDiv.innerHTML = `
-                            <div class="status-msg sucesso">
-                                <i class="fas fa-check-circle"></i>
-                                <div>
-                                    <strong>Dados extraídos com sucesso!</strong>
-                                    <p style="margin:4px 0 0; font-size:14px;">UC: ${dados.uc || 'N/A'} | Total: R$ ${(dados.valores?.valor_total || 0).toFixed(2)}</p>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        statusDiv.innerHTML = `<div class="status-msg info"><i class="fas fa-info-circle"></i> ${data.mensagem || 'Dados extraídos parcialmente.'}</div>`;
-                    }
-                    document.getElementById('uploadActions').classList.remove('hidden');
-                    exibirDadosExtraidos(dados);
-                } else {
-                    const msgErro = data.mensagem || data.detail || data.error || 'Erro ao processar os dados do PDF.';
-                    statusDiv.innerHTML = `<div class="status-msg erro"><i class="fas fa-exclamation-circle"></i> ${msgErro}</div>`;
-                }
-            })
-            .catch(error => {
-                console.error("Erro na requisição:", error);
-                statusDiv.innerHTML = `<div class="status-msg erro"><i class="fas fa-times-circle"></i> Erro: ${error.message}</div>`;
-            });
+            // Apenas guarda o arquivo — backend ainda não tem rota de OCR
+            alert('📤 Upload de PDF enviado. Selecione o contrato e complete os dados.');
+            document.getElementById('uploadActions').classList.remove('hidden');
         }
 
         function cancelarUpload() {
@@ -366,130 +425,37 @@
         }
 
         // ============================================
-        // EXIBIR DADOS EXTRAÍDOS PARA REVISÃO
-        // ============================================
-        function exibirDadosExtraidos(dados) {
-            const container = document.getElementById('dadosExtraidosContainer');
-            const v = dados.valores || {};
-            const c = dados.consumo || {};
-            const l = dados.leituras || {};
-            const dt = dados.datas || {};
-
-            container.innerHTML = `
-                <h3><i class="fas fa-edit"></i> Revise e corrija os dados antes de salvar</h3>
-                <div class="dados-grid">
-                    <div class="campo"><label>UC</label><input id="edit_uc" value="${dados.uc || ''}"></div>
-                    <div class="campo"><label>Titular</label><input id="edit_titular" value="${dados.titular || ''}"></div>
-                    <div class="campo"><label>CPF</label><input id="edit_cpf" value="${dados.cpf || ''}"></div>
-                    <div class="campo"><label>Endereço</label><input id="edit_endereco" value="${dados.endereco || ''}"></div>
-                    <div class="campo"><label>Concessionária</label><input id="edit_concessionaria" value="${dados.concessionaria || ''}"></div>
-                    <div class="campo"><label>Data Emissão</label><input type="date" id="edit_data_emissao" value="${dt.data_emissao || ''}"></div>
-                    <div class="campo"><label>Data Vencimento</label><input type="date" id="edit_data_vencimento" value="${dt.data_vencimento || ''}"></div>
-                    <div class="campo"><label>Data Leitura Ant.</label><input type="date" id="edit_data_leitura_anterior" value="${dt.data_leitura_anterior || ''}"></div>
-                    <div class="campo"><label>Data Leitura Atual</label><input type="date" id="edit_data_leitura_atual" value="${dt.data_leitura_atual || ''}"></div>
-                    <div class="campo"><label>Leitura Ant. (kWh)</label><input type="number" id="edit_leitura_anterior" value="${l.leitura_anterior || 0}"></div>
-                    <div class="campo"><label>Leitura Atual (kWh)</label><input type="number" id="edit_leitura_atual" value="${l.leitura_atual || 0}"></div>
-                    <div class="campo"><label>Dias Faturamento</label><input type="number" id="edit_dias_faturamento" value="${l.dias_faturamento || 30}"></div>
-                    <div class="campo"><label>Consumo (kWh)</label><input type="number" id="edit_consumo_kwh" value="${c.consumo_kwh || 0}"></div>
-                    <div class="campo"><label>Energia Injetada (kWh)</label><input type="number" id="edit_energia_injetada" value="${c.energia_injetada || 0}"></div>
-                    <div class="campo"><label>Saldo Créditos</label><input type="number" step="0.01" id="edit_saldo_creditos" value="${c.saldo_creditos || 0}"></div>
-                    <div class="campo"><label>Valor Energia</label><input type="number" step="0.01" id="edit_valor_energia" value="${v.valor_energia || 0}"></div>
-                    <div class="campo"><label>ICMS</label><input type="number" step="0.01" id="edit_valor_icms" value="${v.valor_icms || 0}"></div>
-                    <div class="campo"><label>PIS</label><input type="number" step="0.01" id="edit_valor_pis" value="${v.valor_pis || 0}"></div>
-                    <div class="campo"><label>COFINS</label><input type="number" step="0.01" id="edit_valor_cofins" value="${v.valor_cofins || 0}"></div>
-                    <div class="campo"><label>Bandeira</label><input id="edit_bandeira" value="${v.bandeira || ''}"></div>
-                    <div class="campo"><label>Valor Bandeira</label><input type="number" step="0.01" id="edit_valor_bandeira" value="${v.valor_bandeira || 0}"></div>
-                    <div class="campo"><label>Multa</label><input type="number" step="0.01" id="edit_valor_multa" value="${v.valor_multa || 0}"></div>
-                    <div class="campo"><label>Juros</label><input type="number" step="0.01" id="edit_valor_juros" value="${v.valor_juros || 0}"></div>
-                    <div class="campo"><label>IPCA</label><input type="number" step="0.01" id="edit_valor_ipca" value="${v.valor_ipca || 0}"></div>
-                    <div class="campo"><label>Iluminação Pública</label><input type="number" step="0.01" id="edit_valor_iluminacao" value="${v.valor_iluminacao || 0}"></div>
-                    <div class="campo"><label>Desconto Social</label><input type="number" step="0.01" id="edit_desconto_social" value="${v.desconto_social || 0}"></div>
-                    <div class="campo"><label>Débitos Anteriores</label><input type="number" step="0.01" id="edit_debitos_anteriores" value="${v.debitos_anteriores || 0}"></div>
-                    <div class="campo"><label>Valor Total</label><input type="number" step="0.01" id="edit_valor_total" value="${v.valor_total || 0}"></div>
-                    <div class="campo"><label>Situação</label>
-                        <select id="edit_status">
-                            <option value="PENDENTE" ${v.situacao_pagamento === 'PENDENTE' ? 'selected' : ''}>PENDENTE</option>
-                            <option value="PAGO" ${v.situacao_pagamento === 'PAGO' ? 'selected' : ''}>PAGO</option>
-                            <option value="VENCIDO" ${v.situacao_pagamento === 'VENCIDO' ? 'selected' : ''}>VENCIDO</option>
-                        </select>
-                    </div>
-                    <div class="campo full"><label>Observação</label><textarea id="edit_observacao" rows="2">${dados.observacao || ''}</textarea></div>
-                </div>
-            `;
-            container.style.display = 'block';
-        }
-
-        // ============================================
-        // SALVAR FATURA EDITADA
+        // SALVAR FATURA EDITADA (do PDF)
         // ============================================
         async function salvarFaturaEditada() {
-            if (!dadosExtraidos) {
-                alert('❌ Nenhum dado para salvar. Faça upload de um PDF primeiro.');
-                return;
-            }
+            const contratoId = prompt('Informe o ID do contrato:');
+            if (!contratoId) return;
 
-            const coletar = (id) => document.getElementById(id)?.value || '';
-            const coletarNum = (id) => parseFloat(document.getElementById(id)?.value) || 0;
-            const coletarInt = (id) => parseInt(document.getElementById(id)?.value) || 0;
-
-            const payload = {
-                uc: coletar('edit_uc'),
-                titular: coletar('edit_titular'),
-                cpf: coletar('edit_cpf'),
-                endereco: coletar('edit_endereco'),
-                concessionaria: coletar('edit_concessionaria'),
-                mes_referencia: (coletar('edit_data_emissao') || '').slice(0,7),
-                datas: {
-                    data_emissao: coletar('edit_data_emissao'),
-                    data_vencimento: coletar('edit_data_vencimento'),
-                    data_leitura_anterior: coletar('edit_data_leitura_anterior'),
-                    data_leitura_atual: coletar('edit_data_leitura_atual')
-                },
-                leituras: {
-                    leitura_anterior: coletarInt('edit_leitura_anterior'),
-                    leitura_atual: coletarInt('edit_leitura_atual'),
-                    dias_faturamento: coletarInt('edit_dias_faturamento')
-                },
-                consumo: {
-                    consumo_kwh: coletarInt('edit_consumo_kwh'),
-                    energia_injetada: coletarInt('edit_energia_injetada'),
-                    saldo_creditos: coletarNum('edit_saldo_creditos')
-                },
-                valores: {
-                    valor_energia: coletarNum('edit_valor_energia'),
-                    valor_pis: coletarNum('edit_valor_pis'),
-                    valor_cofins: coletarNum('edit_valor_cofins'),
-                    valor_icms: coletarNum('edit_valor_icms'),
-                    valor_bandeira: coletarNum('edit_valor_bandeira'),
-                    valor_multa: coletarNum('edit_valor_multa'),
-                    valor_juros: coletarNum('edit_valor_juros'),
-                    valor_ipca: coletarNum('edit_valor_ipca'),
-                    valor_iluminacao: coletarNum('edit_valor_iluminacao'),
-                    desconto_social: coletarNum('edit_desconto_social'),
-                    debitos_anteriores: coletarNum('edit_debitos_anteriores'),
-                    valor_total: coletarNum('edit_valor_total'),
-                    bandeira: coletar('edit_bandeira'),
-                    situacao_pagamento: coletar('edit_status')
-                },
-                observacao: coletar('edit_observacao') || 'Importado via PDF'
+            const dados = {
+                contrato_id: parseInt(contratoId),
+                mes_referencia: new Date().toISOString().slice(0,7) + '-01',
+                data_vencimento: new Date(Date.now() + 30*86400000).toISOString().slice(0,10),
+                consumo_kwh: 0,
+                valor_total: 0,
+                status: 'pendente'
             };
 
             try {
-                const response = await fetch(`${API_URL}/energia/salvar-fatura`, {
+                const res = await fetch(`${API_URL}/energia/faturas`, {
                     method: 'POST',
                     headers: getHeaders(),
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(dados)
                 });
-                const data = await response.json();
-                if (response.ok) {
+                const ret = await res.json();
+                if (res.ok) {
                     alert('✅ Fatura salva com sucesso!');
                     cancelarUpload();
                     carregarFaturas();
                 } else {
-                    alert('❌ Erro: ' + (data.detail || data.mensagem || 'Erro desconhecido ao salvar.'));
+                    alert('❌ Erro: ' + (ret.detail || 'Erro ao salvar'));
                 }
-            } catch (error) {
-                alert('❌ Erro de conexão: ' + error.message);
+            } catch (e) {
+                alert('❌ Erro de conexão');
             }
         }
 
@@ -502,7 +468,7 @@
 
             try {
                 const response = await fetch(`${API_URL}/energia/faturas`, { headers: getHeaders() });
-                if (!response.ok) throw new Error('Erro ao carregar lista de faturas.');
+                if (!response.ok) throw new Error('Erro ao carregar faturas');
                 const faturas = await response.json();
                 faturasCache = faturas;
 
@@ -511,31 +477,30 @@
                         <div class="vazio">
                             <div style="font-size:40px;">📭</div>
                             <p>Nenhuma fatura encontrada.</p>
-                            <p style="font-size:13px;">Faça upload de uma conta de luz para começar.</p>
+                            <p style="font-size:13px;">Cadastre um contrato e depois uma fatura para começar.</p>
                         </div>
                     `;
                     return;
                 }
 
                 let html = '';
-                faturas.sort((a, b) => (b.mes_referencia || '').localeCompare(a.mes_referencia || ''));
+                faturas.sort((a, b) => (a.mes_referencia || '').localeCompare(b.mes_referencia || '')).reverse();
 
                 faturas.forEach(f => {
-                    const statusClass = f.status === 'PAGO' ? 'pago' : (f.status === 'VENCIDO' ? 'vencido' : 'pendente');
-                    const statusLabel = f.status === 'PAGO' ? '✅ Pago' : (f.status === 'VENCIDO' ? '⚠️ Vencido' : '⏳ Pendente');
-                    const temPdf = !!f.pdf_anexo;
+                    const statusMap = { pendente: 'pendente', PENDENTE: 'pendente', pago: 'pago', PAGO: 'pago', vencido: 'vencido', VENCIDO: 'vencido' };
+                    const statusClass = statusMap[f.status] || 'pendente';
+                    const statusLabel = { pendente: '⏳ Pendente', pago: '✅ Pago', vencido: '⚠️ Vencido' }[statusClass];
                     const valorTotal = typeof f.valor_total === 'number' ? f.valor_total.toFixed(2) : parseFloat(f.valor_total || 0).toFixed(2);
+                    const mesRef = f.mes_referencia ? new Date(f.mes_referencia + '-01').toLocaleDateString('pt-BR', {month:'long', year:'numeric'}) : 'N/A';
 
                     html += `
                         <div class="fatura-row" data-id="${f.id}">
                             <div class="fatura-summary" onclick="toggleDetalhes(${f.id})">
-                                <span class="mes">📅 ${f.mes_referencia || 'N/A'}</span>
+                                <span class="mes">📅 ${mesRef}</span>
                                 <span class="valor">R$ ${valorTotal}</span>
                                 <span class="status ${statusClass}">${statusLabel}</span>
                                 <span>⚡ ${f.consumo_kwh || 0} kWh</span>
-                                <span style="font-size:12px; color:#888;">☀️ ${f.energia_injetada || 0} kWh</span>
                                 <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                                    ${temPdf ? `<button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); visualizarPDF(${f.id})" title="Ver PDF">📄</button>` : ''}
                                     <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); toggleDetalhes(${f.id})" title="Editar">✏️</button>
                                     <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deletarFatura(${f.id})" title="Excluir">🗑️</button>
                                     <span style="font-size:12px; color:#888; cursor:pointer;">▼</span>
@@ -554,19 +519,7 @@
         }
 
         // ============================================
-        // VISUALIZAR PDF
-        // ============================================
-        function visualizarPDF(id) {
-            const fatura = faturasCache.find(f => f.id === id);
-            if (fatura && fatura.pdf_anexo) {
-                window.open(`/${fatura.pdf_anexo}`, '_blank');
-            } else {
-                alert('PDF não disponível para esta fatura.');
-            }
-        }
-
-        // ============================================
-        // ABRIR/FECHAR DETALHES PARA EDIÇÃO
+        // ABRIR/FECHAR DETALHES
         // ============================================
         async function toggleDetalhes(id) {
             const detalhesDiv = document.getElementById(`detalhes-${id}`);
@@ -579,39 +532,21 @@
             if (!fatura) return;
 
             const campos = [
-                { label: 'Mês Ref', key: 'mes_referencia', type: 'text' },
-                { label: 'Data Emissão', key: 'data_emissao', type: 'date' },
-                { label: 'Data Vencimento', key: 'data_vencimento', type: 'date' },
-                { label: 'Data Leitura Ant.', key: 'data_leitura_anterior', type: 'date' },
-                { label: 'Data Leitura At.', key: 'data_leitura_atual', type: 'date' },
-                { label: 'Dias Fat.', key: 'dias_faturamento', type: 'number' },
-                { label: 'Leitura Ant. (kWh)', key: 'leitura_anterior', type: 'number' },
-                { label: 'Leitura At. (kWh)', key: 'leitura_atual', type: 'number' },
+                { label: 'Mês Ref', key: 'mes_referencia', type: 'date' },
+                { label: 'Vencimento', key: 'data_vencimento', type: 'date' },
                 { label: 'Consumo (kWh)', key: 'consumo_kwh', type: 'number' },
-                { label: 'Injetado (kWh)', key: 'energia_injetada', type: 'number' },
-                { label: 'Saldo Créditos', key: 'saldo_creditos', type: 'number' },
-                { label: 'Valor Energia', key: 'valor_energia', type: 'number' },
-                { label: 'ICMS', key: 'valor_icms', type: 'number' },
-                { label: 'PIS', key: 'valor_pis', type: 'number' },
-                { label: 'COFINS', key: 'valor_cofins', type: 'number' },
-                { label: 'Bandeira', key: 'bandeira', type: 'text' },
-                { label: 'Valor Bandeira', key: 'valor_bandeira', type: 'number' },
-                { label: 'Multa', key: 'valor_multa', type: 'number' },
-                { label: 'Juros', key: 'valor_juros', type: 'number' },
-                { label: 'IPCA', key: 'valor_ipca', type: 'number' },
-                { label: 'Iluminação Pública', key: 'valor_iluminacao', type: 'number' },
-                { label: 'Desconto Social', key: 'desconto_social', type: 'number' },
-                { label: 'Débitos Ant.', key: 'debitos_anteriores', type: 'number' },
-                { label: 'Valor Total', key: 'valor_total', type: 'number' },
-                { label: 'Status', key: 'status', type: 'select', options: ['PENDENTE', 'PAGO', 'VENCIDO'] }
+                { label: 'Valor Total (R$)', key: 'valor_total', type: 'number' },
+                { label: 'Bandeira', key: 'bandeira_ativa', type: 'text' },
+                { label: 'Status', key: 'status', type: 'select', options: ['pendente', 'pago', 'vencido'] }
             ];
 
             let html = '';
             campos.forEach(c => {
-                const value = fatura[c.key] !== undefined && fatura[c.key] !== null ? fatura[c.key] : '';
+                let value = fatura[c.key] || '';
+                if (c.type === 'date' && value) value = value.slice(0,10);
                 let input = '';
                 if (c.type === 'select') {
-                    input = `<select id="edit_${c.key}_${id}">${c.options.map(o => `<option value="${o}" ${o === value ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
+                    input = `<select id="edit_${c.key}_${id}">${c.options.map(o => `<option value="${o}" ${o === value ? 'selected' : ''}>${o.charAt(0).toUpperCase() + o.slice(1)}</option>`).join('')}</select>`;
                 } else {
                     input = `<input type="${c.type}" id="edit_${c.key}_${id}" value="${value}" step="0.01" />`;
                 }
@@ -633,22 +568,14 @@
         // ATUALIZAR FATURA
         // ============================================
         async function atualizarFatura(id) {
-            const campos = [
-                'mes_referencia', 'data_emissao', 'data_vencimento', 'data_leitura_anterior', 'data_leitura_atual',
-                'dias_faturamento', 'leitura_anterior', 'leitura_atual', 'consumo_kwh', 'energia_injetada',
-                'saldo_creditos', 'valor_energia', 'valor_icms', 'valor_pis', 'valor_cofins', 'bandeira',
-                'valor_bandeira', 'valor_multa', 'valor_juros', 'valor_ipca', 'valor_iluminacao',
-                'desconto_social', 'debitos_anteriores', 'valor_total', 'status'
-            ];
-
-            const dados = {};
-            campos.forEach(key => {
-                const el = document.getElementById(`edit_${key}_${id}`);
-                if (el) {
-                    const val = el.value.trim();
-                    dados[key] = el.type === 'number' ? (parseFloat(val) || 0) : val;
-                }
-            });
+            const dados = {
+                mes_referencia: document.getElementById(`edit_mes_referencia_${id}`).value,
+                data_vencimento: document.getElementById(`edit_data_vencimento_${id}`).value,
+                consumo_kwh: parseFloat(document.getElementById(`edit_consumo_kwh_${id}`).value) || 0,
+                valor_total: parseFloat(document.getElementById(`edit_valor_total_${id}`).value) || 0,
+                bandeira_ativa: document.getElementById(`edit_bandeira_ativa_${id}`).value || null,
+                status: document.getElementById(`edit_status_${id}`).value
+            };
 
             try {
                 const response = await fetch(`${API_URL}/energia/faturas/${id}`, {
@@ -656,12 +583,12 @@
                     headers: getHeaders(),
                     body: JSON.stringify(dados)
                 });
-                const data = await response.json();
                 if (response.ok) {
                     alert('✅ Fatura atualizada!');
                     carregarFaturas();
                 } else {
-                    alert('❌ Erro: ' + (data.detail || data.mensagem || 'Erro desconhecido.'));
+                    const err = await response.json();
+                    alert('❌ Erro: ' + (err.detail || 'Erro ao atualizar'));
                 }
             } catch (error) {
                 alert('❌ Erro de conexão: ' + error.message);
@@ -683,7 +610,7 @@
                     carregarFaturas();
                 } else {
                     const err = await response.json();
-                    alert('❌ Erro: ' + (err.detail || err.mensagem || 'Erro ao excluir.'));
+                    alert('❌ Erro: ' + (err.detail || 'Erro ao excluir'));
                 }
             } catch (error) {
                 alert('❌ Erro de conexão: ' + error.message);
@@ -691,15 +618,29 @@
         }
 
         // ============================================
+        // FUNÇÕES DOS MODAIS (compatibilidade com JS existente)
+        // ============================================
+        function abrirModalContrato() {
+            document.getElementById('modalContrato').classList.add('open');
+        }
+        function abrirModalFaturaEnergia() {
+            document.getElementById('modalFaturaEnergia').classList.add('open');
+        }
+        function fecharModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+
+        // ============================================
         // INICIALIZAR
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
+            carregarContratos();
             carregarFaturas();
         });
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                document.querySelectorAll('.fatura-detalhes.open').forEach(el => el.classList.remove('open'));
+                document.querySelectorAll('.fatura-detalhes.open, .modal.open').forEach(el => el.classList.remove('open'));
             }
         });
     </script>
