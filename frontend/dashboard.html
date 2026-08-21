@@ -189,31 +189,31 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     : '/api/v1';
 
 // ============================================
-// ✅ VERIFICAÇÃO DE AUTENTICAÇÃO MELHORADA
+// ✅ VERIFICAÇÃO DE TOKEN — MAIS FLEXÍVEL
 // ============================================
 function getToken() {
     const token = localStorage.getItem('token');
-    if (!token || token === null || token === 'undefined' || token.length < 10) {
-        console.warn('⚠️ Token inválido ou ausente.');
+    console.log('🔍 Token lido:', token ? '✅ Encontrado (' + token.length + ' caracteres)' : '❌ NÃO ENCONTRADO');
+    
+    if (!token || token === 'null' || token === 'undefined' || token.length < 10) {
         return null;
     }
     return token;
 }
 
 // ============================================
-// ✅ PEGA DADOS DO USUÁRIO com FALLBACK
+// ✅ PEGA NOME DO USUÁRIO — do localStorage ou do token
 // ============================================
 function getUsuarioNome() {
     const nome = localStorage.getItem('usuario_nome');
     if (nome && nome !== 'undefined' && nome !== 'null') {
         return nome;
     }
-    // Tenta extrair do token JWT se não tiver salvo
     try {
         const token = getToken();
         if (token) {
             const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.nome || payload.username || payload.sub || 'Usuário';
+            return payload.nome || payload.username || payload.name || payload.sub || 'Usuário';
         }
     } catch(e) {
         console.log('Não foi possível ler dados do token');
@@ -222,25 +222,15 @@ function getUsuarioNome() {
 }
 
 // ============================================
-// ✅ INICIALIZA NOME DO USUÁRIO
-// ============================================
-const usuarioNome = getUsuarioNome();
-document.getElementById('userName').textContent = `👤 ${usuarioNome}`;
-console.log(`✅ Usuário: ${usuarioNome}`);
-
-// ============================================
-// ✅ FUNÇÃO DE LOGOUT LIMPA TUDO
+// ✅ FUNÇÃO DE LOGOUT
 // ============================================
 function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario_nome');
-    localStorage.removeItem('usuario_id');
     localStorage.clear();
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
 }
 
 // ============================================
-// ✅ HEADERS PARA TODAS AS REQUISIÇÕES
+// ✅ HEADERS PARA REQUISIÇÕES
 // ============================================
 function getHeaders() {
     const token = getToken();
@@ -257,7 +247,7 @@ function getHeaders() {
 }
 
 // ============================================
-// ✅ CARREGAR DADOS — com URL correta e tratamento de erros
+// ✅ CARREGAR DADOS
 // ============================================
 async function carregarDados() {
     const token = getToken();
@@ -267,14 +257,12 @@ async function carregarDados() {
         console.log('📊 Carregando dados do dashboard...');
         console.log('🌐 API_URL:', API_URL);
         
-        // ✅ ROTA CORRETA — confirme com seu backend!
         const response = await fetch(`${API_URL}/lancamentos/`, { 
             headers: getHeaders() 
         });
 
-        // Token expirado ou inválido
         if (response.status === 401 || response.status === 403) {
-            console.warn('⚠️ Token inválido/expirado. Faça login novamente.');
+            console.warn('⚠️ Token inválido/expirado.');
             alert('⚠️ Sua sessão expirou! Faça login novamente.');
             logout();
             return;
@@ -287,20 +275,17 @@ async function carregarDados() {
         const lancamentos = await response.json();
         console.log(`✅ ${lancamentos.length} lançamentos carregados`);
 
-        // Filtra por tipo (aceita nomes diferentes)
         const entradas = lancamentos.filter(l => 
             l.tipo === 'receita' || l.tipo === 'ENTRADA' || l.tipo === 'entrada'
         );
         const saidas = lancamentos.filter(l => 
-            l.tipo === 'despesa' || l.tipo === 'SAIDA' || l.tipo === 'saida' || l.tipo === 'despesa'
+            l.tipo === 'despesa' || l.tipo === 'SAIDA' || l.tipo === 'saida'
         );
 
-        // Calcula totais
         const totalEntradas = entradas.reduce((sum, l) => sum + (parseFloat(l.valor) || 0), 0);
         const totalSaidas = saidas.reduce((sum, l) => sum + (parseFloat(l.valor) || 0), 0);
         const saldo = totalEntradas - totalSaidas;
 
-        // Atualiza cards
         document.getElementById('totalEntradas').textContent = `R$ ${totalEntradas.toFixed(2)}`;
         document.getElementById('totalSaidas').textContent = `R$ ${totalSaidas.toFixed(2)}`;
         
@@ -310,7 +295,6 @@ async function carregarDados() {
         
         document.getElementById('totalLancamentos').textContent = lancamentos.length;
 
-        // Resumo do mês
         const hoje = new Date();
         document.getElementById('mesAno').textContent = `${String(hoje.getMonth()+1).padStart(2,'0')}/${hoje.getFullYear()}`;
         
@@ -322,11 +306,9 @@ async function carregarDados() {
         const margem = totalEntradas > 0 ? ((totalEntradas - totalSaidas) / totalEntradas * 100) : 0;
         document.getElementById('margemMes').textContent = `${margem.toFixed(1)}%`;
 
-        // Badges
         document.getElementById('badgeEntradas').textContent = entradas.length;
         document.getElementById('badgeSaidas').textContent = saidas.length;
 
-        // Renderiza tabelas
         renderizarTabela('tabelaEntradas', entradas, 'entrada');
         renderizarTabela('tabelaSaidas', saidas, 'saida');
 
@@ -336,7 +318,7 @@ async function carregarDados() {
         const erroHtml = `
             <div class="erro-conexao">
                 ⚠️ Erro ao carregar dados: ${error.message}<br>
-                <small>Verifique se o backend está rodando e a rota /lancamentos/ está correta.</small>
+                <small>Verifique se o backend está rodando.</small>
                 <br><button onclick="carregarDados()">🔁 Tentar novamente</button>
             </div>
         `;
@@ -350,7 +332,7 @@ async function carregarDados() {
 }
 
 // ============================================
-// ✅ RENDERIZAR TABELA — com mais campos aceitos
+// ✅ RENDERIZAR TABELA
 // ============================================
 function renderizarTabela(elementId, dados, tipo) {
     const container = document.getElementById(elementId);
@@ -407,17 +389,29 @@ function renderizarTabela(elementId, dados, tipo) {
 }
 
 // ============================================
-// ✅ INICIALIZAÇÃO
+// ✅ INICIALIZAÇÃO — COM PEQUENO ATRASO PARA GARANTIR LEITURA DO TOKEN
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Inicializando dashboard...');
-    const token = getToken();
-    if (!token) {
-        alert('⚠️ Faça login primeiro!');
-        window.location.href = 'index.html';
-        return;
-    }
-    carregarDados();
+    
+    // ⏱️ Pequeno atraso para garantir que o localStorage esteja disponível
+    setTimeout(() => {
+        const token = getToken();
+        
+        if (!token) {
+            alert('⚠️ Faça login primeiro!');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // ✅ Mostra nome do usuário
+        const usuarioNome = getUsuarioNome();
+        document.getElementById('userName').textContent = `👤 ${usuarioNome}`;
+        console.log(`✅ Usuário logado: ${usuarioNome}`);
+
+        // ✅ Carrega os dados
+        carregarDados();
+    }, 150); // ⏱️ Espera 150ms antes de verificar
 });
 </script>
 </body>
