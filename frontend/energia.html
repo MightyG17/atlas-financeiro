@@ -319,24 +319,59 @@
         // ============================================
         // AJUDA: PEGAR TOKEN DE FORMA SEGURA
         // ============================================
-        function getToken() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('⚠️ Você precisa fazer login primeiro!');
-                window.location.href = 'login.html';
-                return null;
-            }
-            return token;
-        }
+// ============================================
+// ✅ SAFE TOKEN CHECK — works every time
+// ============================================
+// ============================================
+// ✅ LÊ O TOKEN DO NOME CORRETO: authToken
+// ============================================
+function getToken() {
+    // SEU SISTEMA SALVA COMO authToken, NÃO COMO token!
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    console.log('🔍 Token lido:', token ? '✅ ENCONTRADO! (' + token.length + ' caracteres)' : '❌ NÃO ENCONTRADO');
+    
+    if (!token || token === 'null' || token === 'undefined' || token.length < 10) {
+        return null;
+    }
+    return token;
+}
 
-        function getHeaders() {
-            const token = getToken();
-            if (!token) return {};
-            return {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            };
+// ============================================
+// ✅ LÊ NOME DO USUÁRIO DE userData (seu sistema)
+// ============================================
+function getUsuarioNome() {
+    // SEU SISTEMA SALVA DADOS EM userData como JSON
+    const userDataStr = localStorage.getItem('userData');
+    if (userDataStr) {
+        try {
+            const userData = JSON.parse(userDataStr);
+            if (userData && userData.nome) {
+                return userData.nome; // ✅ VAI APARECER: Jardel de Avelar Teixeira
+            }
+        } catch(e) {
+            console.log('⚠️ Erro ao ler userData:', e);
         }
+    }
+    // Fallback se não conseguir ler userData
+    return localStorage.getItem('usuario_nome') || 'Usuário';
+}
+
+// ✅ DELAYED CHECK — give localStorage time to load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Page loaded, checking login...');
+    
+    // Small delay to ensure localStorage is fully available
+    setTimeout(() => {
+        const token = getToken();
+        if (!token) {
+            alert('⚠️ Faça login primeiro!');
+            window.location.href = 'login.html';
+            return;
+        }
+        console.log('✅ Logado com sucesso!');
+        // Rest of your init code here...
+    }, 100);
+});
 
         // ============================================
         // FUNÇÕES DOS MODAIS — CORRIGIDAS!
