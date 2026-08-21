@@ -4,126 +4,421 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Atlas Financeiro</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dashboard-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .dashboard-actions .btn-acao {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dashboard-actions .btn-acao:hover {
+            transform: scale(1.03);
+        }
+        .btn-entrada { background: #27ae60; color: white; }
+        .btn-entrada:hover { background: #1e8449; }
+        .btn-saida { background: #e74c3c; color: white; }
+        .btn-saida:hover { background: #c0392b; }
+        .btn-relatorios { background: #3498db; color: white; }
+        .btn-relatorios:hover { background: #2980b9; }
+        .btn-atualizar { background: #f0f2f5; color: #333; border: 1px solid #ddd; }
+        .btn-atualizar:hover { background: #e0e0e0; }
+        
+        .erro-conexao {
+            background: #fee2e2;
+            border: 1px solid #f87171;
+            color: #991b1b;
+            padding: 16px 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .erro-conexao button {
+            background: #991b1b;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 12px;
+            font-weight: 600;
+        }
+        .erro-conexao button:hover {
+            background: #7f1d1d;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-actions .btn-acao {
+                flex: 1;
+                justify-content: center;
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <i class="fas fa-chart-pie"></i>
-                <span>Atlas Financeiro</span>
-            </div>
-            <div class="nav-links">
-                <a href="dashboard.html" class="active">Dashboard</a>
-                <a href="lancamentos.html">Lançamentos</a>
-                <a href="faturas.html">Faturas</a>
-                <a href="energia.html">Energia</a>
-                <a href="grupos.html">Grupos</a>
-                <a href="contabilidade.html">Contabilidade</a>
-                <a href="#" onclick="logout(event)" class="btn btn-danger">Sair</a>
-            </div>
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-                <i class="fas fa-bars"></i>
-            </button>
+
+<!-- ============================================
+     NAVBAR
+     ============================================ -->
+<div class="navbar">
+    <div class="nav-container">
+        <div class="nav-logo">
+            <a href="dashboard.html" style="text-decoration:none; display:flex; align-items:center; gap:10px; color:white;">
+                <span style="font-size:28px;">🏛️</span>
+                <span style="font-size:22px; font-weight:800; background:linear-gradient(135deg, #f7971e, #ffd200); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">Atlas Financeiro</span>
+            </a>
         </div>
-    </nav>
-
-    <div class="container main-content">
-        <div class="page-header">
-            <div>
-                <h1>Dashboard</h1>
-                <p class="text-muted">Visão geral da sua saúde financeira</p>
-            </div>
-            <div class="user-info">
-                <span id="userName">Carregando...</span>
-                <i class="fas fa-user-circle"></i>
-            </div>
+        <div class="nav-links">
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="pages/entradas.html">💰 Entradas</a>
+            <a href="pages/saidas.html">📤 Saídas</a>
+            <a href="pages/relatorios.html">📊 Relatórios</a>
+            <a href="pages/aprender.html">📚 Aprender</a>
+            <a href="pages/sonhos.html">🎯 Sonhos</a>
+            <a href="pages/grupos.html">👥 Grupos</a>
+            <a href="pages/investimentos.html">📈 Investimentos</a>
         </div>
-
-        <!-- Cards de Resumo -->
-        <div class="dashboard-cards">
-            <div class="card dashboard-card">
-                <div class="card-icon"><i class="fas fa-wallet"></i></div>
-                <div class="card-content">
-                    <span class="card-label">Saldo Total</span>
-                    <span class="card-value" id="saldoTotal">R$ 0,00</span>
-                </div>
-            </div>
-            <div class="card dashboard-card success">
-                <div class="card-icon"><i class="fas fa-arrow-up"></i></div>
-                <div class="card-content">
-                    <span class="card-label">Receitas</span>
-                    <span class="card-value" id="totalReceitas">R$ 0,00</span>
-                </div>
-            </div>
-            <div class="card dashboard-card danger">
-                <div class="card-icon"><i class="fas fa-arrow-down"></i></div>
-                <div class="card-content">
-                    <span class="card-label">Despesas</span>
-                    <span class="card-value" id="totalDespesas">R$ 0,00</span>
-                </div>
-            </div>
-            <div class="card dashboard-card info">
-                <div class="card-icon"><i class="fas fa-file-invoice"></i></div>
-                <div class="card-content">
-                    <span class="card-label">Faturas Pendentes</span>
-                    <span class="card-value" id="faturasPendentes">0</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráficos e Mais -->
-        <div class="dashboard-grid">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Últimos Lançamentos</h3>
-                    <a href="lancamentos.html" class="btn btn-sm btn-outline">Ver todos</a>
-                </div>
-                <div class="card-body">
-                    <div id="ultimosLancamentos" class="lancamentos-list">
-                        <p class="text-muted">Carregando...</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h3>Resumo do Período</h3>
-                </div>
-                <div class="card-body">
-                    <div class="period-summary">
-                        <div class="summary-item">
-                            <span class="label">Este Mês</span>
-                            <div class="summary-values">
-                                <span class="value success" id="receitasMes">R$ 0,00</span>
-                                <span class="value danger" id="despesasMes">R$ 0,00</span>
-                            </div>
-                        </div>
-                        <div class="summary-item">
-                            <span class="label">Últimos 30 Dias</span>
-                            <div class="summary-values">
-                                <span class="value success" id="receitas30d">R$ 0,00</span>
-                                <span class="value danger" id="despesas30d">R$ 0,00</span>
-                            </div>
-                        </div>
-                        <div class="summary-item">
-                            <span class="label">Últimos 90 Dias</span>
-                            <div class="summary-values">
-                                <span class="value success" id="receitas90d">R$ 0,00</span>
-                                <span class="value danger" id="despesas90d">R$ 0,00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="nav-user">
+            <span class="user-badge" id="userName">👤 Carregando...</span>
+            <button class="logout" onclick="logout()">🚪 Sair</button>
         </div>
     </div>
+</div>
 
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/utils.js"></script>
+<!-- ============================================
+     DASHBOARD
+     ============================================ -->
+<main class="dashboard">
+
+    <!-- BOTÕES DE AÇÃO -->
+    <div class="dashboard-actions">
+        <button class="btn-acao btn-entrada" onclick="window.location.href='pages/entradas.html'">
+            💰 Lançar Entrada
+        </button>
+        <button class="btn-acao btn-saida" onclick="window.location.href='pages/saidas.html'">
+            📤 Lançar Saída
+        </button>
+        <button class="btn-acao btn-relatorios" onclick="window.location.href='pages/relatorios.html'">
+            📊 Relatórios
+        </button>
+        <button class="btn-acao btn-atualizar" onclick="carregarDados()">
+            🔄 Atualizar
+        </button>
+    </div>
+
+    <!-- CARDS -->
+    <section class="cards-grid">
+        <div class="card entrada">
+            <div class="card-label">💰 Total Entradas</div>
+            <div class="card-value positive" id="totalEntradas">R$ 0,00</div>
+            <div class="card-sub">Últimos 30 dias</div>
+        </div>
+        <div class="card saida">
+            <div class="card-label">📤 Total Saídas</div>
+            <div class="card-value negative" id="totalSaidas">R$ 0,00</div>
+            <div class="card-sub">Últimos 30 dias</div>
+        </div>
+        <div class="card saldo">
+            <div class="card-label">💎 Saldo Atual</div>
+            <div class="card-value" id="saldoAtual">R$ 0,00</div>
+            <div class="card-sub">Entradas - Saídas</div>
+        </div>
+        <div class="card total">
+            <div class="card-label">📊 Total Lançamentos</div>
+            <div class="card-value" id="totalLancamentos">0</div>
+            <div class="card-sub">Movimentações</div>
+        </div>
+    </section>
+
+    <!-- RESUMO DO MÊS -->
+    <section class="resumo-mes" id="resumoMes">
+        <div class="resumo-item">
+            <div class="label">📅 Mês/Ano</div>
+            <div class="valor" id="mesAno" style="font-size:20px;">--/----</div>
+        </div>
+        <div class="resumo-divider"></div>
+        <div class="resumo-item">
+            <div class="label">📌 Resultado</div>
+            <div class="valor lucro" id="resultadoMes">R$ 0,00</div>
+        </div>
+        <div class="resumo-divider"></div>
+        <div class="resumo-item">
+            <div class="label">📈 Margem</div>
+            <div class="valor" id="margemMes">0%</div>
+        </div>
+    </section>
+
+    <!-- TABELAS SEPARADAS -->
+    <div class="tabelas-container">
+        <div class="tabela-box">
+            <h3>💰 Entradas <span class="badge verde" id="badgeEntradas">0</span></h3>
+            <div id="tabelaEntradas"><div class="vazio">Nenhuma entrada registrada</div></div>
+        </div>
+        <div class="tabela-box">
+            <h3>📤 Saídas <span class="badge vermelho" id="badgeSaidas">0</span></h3>
+            <div id="tabelaSaidas"><div class="vazio">Nenhuma saída registrada</div></div>
+        </div>
+    </div>
+</main>
+
+<!-- ============================================
+     SCRIPT
+     ============================================ -->
+<script>
+// ============================================
+// ✅ URL DINÂMICA — funciona LOCAL e no RENDER automaticamente
+// ============================================
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000/api/v1'
+    : '/api/v1';
+
+// ============================================
+// ✅ VERIFICAÇÃO DE AUTENTICAÇÃO MELHORADA
+// ============================================
+function getToken() {
+    const token = localStorage.getItem('token');
+    if (!token || token === null || token === 'undefined' || token.length < 10) {
+        console.warn('⚠️ Token inválido ou ausente.');
+        return null;
+    }
+    return token;
+}
+
+// ============================================
+// ✅ PEGA DADOS DO USUÁRIO com FALLBACK
+// ============================================
+function getUsuarioNome() {
+    const nome = localStorage.getItem('usuario_nome');
+    if (nome && nome !== 'undefined' && nome !== 'null') {
+        return nome;
+    }
+    // Tenta extrair do token JWT se não tiver salvo
+    try {
+        const token = getToken();
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.nome || payload.username || payload.sub || 'Usuário';
+        }
+    } catch(e) {
+        console.log('Não foi possível ler dados do token');
+    }
+    return 'Usuário';
+}
+
+// ============================================
+// ✅ INICIALIZA NOME DO USUÁRIO
+// ============================================
+const usuarioNome = getUsuarioNome();
+document.getElementById('userName').textContent = `👤 ${usuarioNome}`;
+console.log(`✅ Usuário: ${usuarioNome}`);
+
+// ============================================
+// ✅ FUNÇÃO DE LOGOUT LIMPA TUDO
+// ============================================
+function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario_nome');
+    localStorage.removeItem('usuario_id');
+    localStorage.clear();
+    window.location.href = 'index.html';
+}
+
+// ============================================
+// ✅ HEADERS PARA TODAS AS REQUISIÇÕES
+// ============================================
+function getHeaders() {
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ Sessão expirada! Faça login novamente.');
+        logout();
+        return {};
+    }
+    return {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
+}
+
+// ============================================
+// ✅ CARREGAR DADOS — com URL correta e tratamento de erros
+// ============================================
+async function carregarDados() {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+        console.log('📊 Carregando dados do dashboard...');
+        console.log('🌐 API_URL:', API_URL);
+        
+        // ✅ ROTA CORRETA — confirme com seu backend!
+        const response = await fetch(`${API_URL}/lancamentos/`, { 
+            headers: getHeaders() 
+        });
+
+        // Token expirado ou inválido
+        if (response.status === 401 || response.status === 403) {
+            console.warn('⚠️ Token inválido/expirado. Faça login novamente.');
+            alert('⚠️ Sua sessão expirou! Faça login novamente.');
+            logout();
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        }
+
+        const lancamentos = await response.json();
+        console.log(`✅ ${lancamentos.length} lançamentos carregados`);
+
+        // Filtra por tipo (aceita nomes diferentes)
+        const entradas = lancamentos.filter(l => 
+            l.tipo === 'receita' || l.tipo === 'ENTRADA' || l.tipo === 'entrada'
+        );
+        const saidas = lancamentos.filter(l => 
+            l.tipo === 'despesa' || l.tipo === 'SAIDA' || l.tipo === 'saida' || l.tipo === 'despesa'
+        );
+
+        // Calcula totais
+        const totalEntradas = entradas.reduce((sum, l) => sum + (parseFloat(l.valor) || 0), 0);
+        const totalSaidas = saidas.reduce((sum, l) => sum + (parseFloat(l.valor) || 0), 0);
+        const saldo = totalEntradas - totalSaidas;
+
+        // Atualiza cards
+        document.getElementById('totalEntradas').textContent = `R$ ${totalEntradas.toFixed(2)}`;
+        document.getElementById('totalSaidas').textContent = `R$ ${totalSaidas.toFixed(2)}`;
+        
+        const saldoEl = document.getElementById('saldoAtual');
+        saldoEl.textContent = `R$ ${saldo.toFixed(2)}`;
+        saldoEl.className = 'card-value ' + (saldo >= 0 ? 'positive' : 'negative');
+        
+        document.getElementById('totalLancamentos').textContent = lancamentos.length;
+
+        // Resumo do mês
+        const hoje = new Date();
+        document.getElementById('mesAno').textContent = `${String(hoje.getMonth()+1).padStart(2,'0')}/${hoje.getFullYear()}`;
+        
+        const resultado = totalEntradas - totalSaidas;
+        const resultadoEl = document.getElementById('resultadoMes');
+        resultadoEl.textContent = `R$ ${resultado.toFixed(2)}`;
+        resultadoEl.className = 'valor ' + (resultado >= 0 ? 'lucro' : 'prejuizo');
+
+        const margem = totalEntradas > 0 ? ((totalEntradas - totalSaidas) / totalEntradas * 100) : 0;
+        document.getElementById('margemMes').textContent = `${margem.toFixed(1)}%`;
+
+        // Badges
+        document.getElementById('badgeEntradas').textContent = entradas.length;
+        document.getElementById('badgeSaidas').textContent = saidas.length;
+
+        // Renderiza tabelas
+        renderizarTabela('tabelaEntradas', entradas, 'entrada');
+        renderizarTabela('tabelaSaidas', saidas, 'saida');
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados:', error);
+        
+        const erroHtml = `
+            <div class="erro-conexao">
+                ⚠️ Erro ao carregar dados: ${error.message}<br>
+                <small>Verifique se o backend está rodando e a rota /lancamentos/ está correta.</small>
+                <br><button onclick="carregarDados()">🔁 Tentar novamente</button>
+            </div>
+        `;
+        
+        document.getElementById('totalEntradas').textContent = '⚠️ Erro';
+        document.getElementById('totalSaidas').textContent = '⚠️ Erro';
+        document.getElementById('saldoAtual').textContent = '⚠️ Erro';
+        document.getElementById('tabelaEntradas').innerHTML = erroHtml;
+        document.getElementById('tabelaSaidas').innerHTML = erroHtml;
+    }
+}
+
+// ============================================
+// ✅ RENDERIZAR TABELA — com mais campos aceitos
+// ============================================
+function renderizarTabela(elementId, dados, tipo) {
+    const container = document.getElementById(elementId);
+    
+    if (!dados || dados.length === 0) {
+        container.innerHTML = `<div class="vazio">Nenhum lançamento do tipo ${tipo === 'entrada' ? 'Entrada' : 'Saída'}</div>`;
+        return;
+    }
+
+    let html = `<table>
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th style="text-align:right">Valor</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    dados.sort((a, b) => {
+        const dataA = new Date(a.data_lancamento || a.data || 0);
+        const dataB = new Date(b.data_lancamento || b.data || 0);
+        return dataB - dataA;
+    });
+
+    dados.forEach(l => {
+        const sinal = tipo === 'entrada' ? '+' : '-';
+        const classe = tipo === 'entrada' ? 'entrada' : 'saida';
+        const status = l.status || (tipo === 'entrada' ? 'PAGO' : 'PENDENTE');
+        const statusClass = status === 'PAGO' ? 'status-pago' : status === 'VENCIDO' ? 'status-vencido' : 'status-pendente';
+        const valor = parseFloat(l.valor) || 0;
+        
+        html += `<tr>
+            <td>${l.data_lancamento || l.data || '-'}</td>
+            <td>${l.descricao || l.nome_conta || '-'}</td>
+            <td>${l.categoria || l.nome_conta || '-'}</td>
+            <td style="text-align:right"><span class="valor ${classe}">${sinal} R$ ${valor.toFixed(2)}</span></td>
+            <td><span class="status-badge ${statusClass}">${status}</span></td>
+        </tr>`;
+    });
+
+    const total = dados.reduce((sum, l) => sum + (parseFloat(l.valor) || 0), 0);
+    const cor = tipo === 'entrada' ? '#27ae60' : '#e74c3c';
+    html += `<tr style="background:#f8f9fa; font-weight:700;">
+        <td colspan="3" style="text-align:right">TOTAL</td>
+        <td style="text-align:right; color:${cor}">R$ ${total.toFixed(2)}</td>
+        <td></td>
+    </tr>`;
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+// ============================================
+// ✅ INICIALIZAÇÃO
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando dashboard...');
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ Faça login primeiro!');
+        window.location.href = 'index.html';
+        return;
+    }
+    carregarDados();
+});
+</script>
 </body>
 </html>
