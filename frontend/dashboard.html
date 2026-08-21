@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Atlas Financeiro</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <style>
         .dashboard-actions {
             display: flex;
@@ -178,18 +178,18 @@
 </main>
 
 <!-- ============================================
-     SCRIPT — ✅ ADAPTADO PARA SEU SISTEMA!
+     SCRIPT
      ============================================ -->
 <script>
 // ============================================
-// ✅ URL DINÂMICA — funciona LOCAL e no RENDER
+// ✅ URL DINÂMICA — funciona LOCAL e no RENDER automaticamente
 // ============================================
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:8000/api/v1'
     : '/api/v1';
 
 // ============================================
-// ✅ LÊ O TOKEN DO NOME CORRETO: authToken
+// ✅ VERIFICAÇÃO DE TOKEN — MAIS FLEXÍVEL
 // ============================================
 function getToken() {
     // SEU SISTEMA SALVA COMO authToken, NÃO COMO token!
@@ -203,7 +203,7 @@ function getToken() {
 }
 
 // ============================================
-// ✅ LÊ NOME DO USUÁRIO DE userData (seu sistema)
+// ✅ PEGA NOME DO USUÁRIO — do localStorage ou do token
 // ============================================
 function getUsuarioNome() {
     // SEU SISTEMA SALVA DADOS EM userData como JSON
@@ -223,32 +223,6 @@ function getUsuarioNome() {
 }
 
 // ============================================
-// ✅ INICIALIZA — COM PEQUENO ATRASO PARA GARANTIR
-// ============================================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Inicializando Dashboard...');
-    
-    // ⏱️ Espera um pouquinho para garantir que localStorage está pronto
-    setTimeout(() => {
-        const token = getToken();
-        
-        if (!token) {
-            alert('⚠️ Faça login primeiro!');
-            window.location.href = 'login.html';
-            return;
-        }
-
-        // ✅ Mostra o nome do usuário
-        const nomeUsuario = getUsuarioNome();
-        document.getElementById('userName').textContent = `👤 ${nomeUsuario}`;
-        console.log(`✅ Usuário logado: ${nomeUsuario}`);
-
-        // ✅ Carrega os dados
-        carregarDados();
-    }, 150);
-});
-
-// ============================================
 // ✅ FUNÇÃO DE LOGOUT
 // ============================================
 function logout() {
@@ -257,7 +231,7 @@ function logout() {
 }
 
 // ============================================
-// ✅ HEADERS COM TOKEN CORRETO
+// ✅ HEADERS PARA REQUISIÇÕES
 // ============================================
 function getHeaders() {
     const token = getToken();
@@ -414,6 +388,32 @@ function renderizarTabela(elementId, dados, tipo) {
     html += `</tbody></table>`;
     container.innerHTML = html;
 }
+
+// ============================================
+// ✅ INICIALIZAÇÃO — COM PEQUENO ATRASO PARA GARANTIR LEITURA DO TOKEN
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando dashboard...');
+    
+    // ⏱️ Pequeno atraso para garantir que o localStorage esteja disponível
+    setTimeout(() => {
+        const token = getToken();
+        
+        if (!token) {
+            alert('⚠️ Faça login primeiro!');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // ✅ Mostra nome do usuário
+        const usuarioNome = getUsuarioNome();
+        document.getElementById('userName').textContent = `👤 ${usuarioNome}`;
+        console.log(`✅ Usuário logado: ${usuarioNome}`);
+
+        // ✅ Carrega os dados
+        carregarDados();
+    }, 150); // ⏱️ Espera 150ms antes de verificar
+});
 </script>
 </body>
 </html>
