@@ -20,7 +20,7 @@
                 <p>Faça login para acessar sua conta</p>
             </div>
 
-            <form id="loginForm" onsubmit="handleLogin(event)">
+            <form id="loginForm">
                 <div class="form-group">
                     <label for="email">
                         <i class="fas fa-envelope"></i> Email
@@ -63,47 +63,64 @@
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
 <script>
+    // ============================================
+    // ✅ FUNÇÃO DE MOSTRAR/ESCONDER SENHA
+    // ============================================
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    }
+
+    // ============================================
+    // ✅ LOGIN COM SALVAMENTO DE DADOS
+    // ============================================
     document.addEventListener('DOMContentLoaded', () => {
-        const loginForm = document.getElementById('loginForm'); // Garanta que a tag <form id="loginForm"> tem esse ID
+        const loginForm = document.getElementById('loginForm');
 
         if (loginForm) {
             loginForm.addEventListener('submit', async (event) => {
-                // 1. OBRIGATÓRIO: Impede a página de atualizar no submit
                 event.preventDefault();
 
-                // Captura os valores dos campos
-                const emailInput = document.getElementById('email');
-                const passwordInput = document.getElementById('password') || document.getElementById('senha');
-                const errorAlert = document.getElementById('errorMessage') || document.getElementById('loginError');
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const errorAlert = document.getElementById('loginError');
 
-                const email = emailInput ? emailInput.value : '';
-                const password = passwordInput ? passwordInput.value : '';
-
-                // Oculta mensagens de erro anteriores
-                if (errorAlert) errorAlert.style.display = 'none';
+                // Oculta mensagem de erro
+                errorAlert.style.display = 'none';
 
                 try {
-                    // Chama a função login do api.js
+                    // Chama a API de login
                     const result = await window.api.login(email, password);
 
                     if (result.success) {
-                        // Sucesso: Redireciona para a página principal
+                        // ✅ ==== SALVA OS DADOS NO NAVEGADOR ====
+                        // Essas 3 linhas fazem o nome aparecer e a sessão funcionar!
+                        localStorage.setItem('token', result.token || result.access_token || '');
+                        localStorage.setItem('usuario_nome', result.nome || result.username || result.usuario || 'Usuário');
+                        localStorage.setItem('usuario_id', result.id || result.usuario_id || '');
+                        // ✅ =======================================
+
+                        // Redireciona para o Dashboard
                         window.location.href = 'dashboard.html';
                     } else {
-                        // Exibe a mensagem de erro retornada pela API (ex: "E-mail ou senha incorretos")
-                        if (errorAlert) {
-                            errorAlert.textContent = result.message || 'Falha ao realizar login.';
-                            errorAlert.style.display = 'block';
-                        } else {
-                            alert(result.message || 'Falha ao realizar login.');
-                        }
+                        // Exibe erro de login
+                        errorAlert.textContent = result.message || 'E-mail ou senha incorretos.';
+                        errorAlert.style.display = 'block';
                     }
                 } catch (err) {
                     console.error('Erro na autenticação:', err);
-                    if (errorAlert) {
-                        errorAlert.textContent = 'Erro ao se conectar com o servidor.';
-                        errorAlert.style.display = 'block';
-                    }
+                    errorAlert.textContent = 'Erro ao conectar com o servidor. Verifique sua conexão.';
+                    errorAlert.style.display = 'block';
                 }
             });
         }
