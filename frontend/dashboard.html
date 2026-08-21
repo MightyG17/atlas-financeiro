@@ -192,8 +192,9 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
 // ✅ VERIFICAÇÃO DE TOKEN — MAIS FLEXÍVEL
 // ============================================
 function getToken() {
-    const token = localStorage.getItem('token');
-    console.log('🔍 Token lido:', token ? '✅ Encontrado (' + token.length + ' caracteres)' : '❌ NÃO ENCONTRADO');
+    // ✅ LÊ O NOME CORRETO QUE O SEU SISTEMA USA: authToken
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    console.log('🔍 Token lido:', token ? '✅ Encontrado!' : '❌ NÃO ENCONTRADO');
     
     if (!token || token === 'null' || token === 'undefined' || token.length < 10) {
         return null;
@@ -205,20 +206,20 @@ function getToken() {
 // ✅ PEGA NOME DO USUÁRIO — do localStorage ou do token
 // ============================================
 function getUsuarioNome() {
-    const nome = localStorage.getItem('usuario_nome');
-    if (nome && nome !== 'undefined' && nome !== 'null') {
-        return nome;
-    }
-    try {
-        const token = getToken();
-        if (token) {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.nome || payload.username || payload.name || payload.sub || 'Usuário';
+    // ✅ LÊ userData e EXTRAI o nome de lá
+    const userDataStr = localStorage.getItem('userData');
+    if (userDataStr) {
+        try {
+            const userData = JSON.parse(userDataStr);
+            if (userData && userData.nome) {
+                return userData.nome; // ✅ Vai aparecer "Jardel de Avelar Teixeira"
+            }
+        } catch(e) {
+            console.log('Erro ao ler userData:', e);
         }
-    } catch(e) {
-        console.log('Não foi possível ler dados do token');
     }
-    return 'Usuário';
+    // Fallback
+    return localStorage.getItem('usuario_nome') || 'Usuário';
 }
 
 // ============================================
