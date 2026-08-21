@@ -8,6 +8,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ESTILOS DOS MODAIS — ESTAVA FALTANDO! */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal.open { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; border-radius: 12px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #eee; }
+        .modal-header h3 { margin: 0; font-size: 18px; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #888; }
+        .modal-close:hover { color: #000; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid #eee; display: flex; gap: 8px; justify-content: flex-end; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #f7971e; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
         .upload-section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; }
         .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; }
         .upload-area:hover { border-color: #f7971e; background: #fef9f0; }
@@ -30,7 +48,6 @@
         .dados-grid .campo label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
         .dados-grid .campo input, .dados-grid .campo select { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; background: white; }
         .dados-grid .campo input:focus, .dados-grid .campo select:focus { outline: none; border-color: #f7971e; }
-        .dados-grid .campo.full { grid-column: 1 / -1; }
 
         .fatura-row { border-bottom: 1px solid #eee; }
         .fatura-row:last-child { border-bottom: none; }
@@ -56,13 +73,14 @@
         .btn-atualizar-fatura { padding: 6px 14px; background: #f7971e; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.3s; }
         .btn-atualizar-fatura:hover { background: #d68910; }
 
+        .contratos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+        .contratos-grid > div { border: 1px solid #eee; border-radius: 8px; padding: 14px; }
+
         @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
             .dados-grid { grid-template-columns: 1fr; }
             .fatura-detalhes { grid-template-columns: 1fr 1fr; }
             .fatura-summary { flex-direction: column; align-items: stretch; gap: 4px; }
-        }
-        @media (max-width: 480px) {
-            .fatura-detalhes { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -95,7 +113,7 @@
                 <h1><i class="fas fa-bolt"></i> Energia</h1>
                 <p class="text-muted">Gestão de contratos, faturas e upload de PDF</p>
             </div>
-            <div>
+            <div style="display:flex; gap:8px;">
                 <button class="btn btn-primary" onclick="abrirModalContrato()">
                     <i class="fas fa-plus"></i> Novo Contrato
                 </button>
@@ -119,13 +137,23 @@
                         <input type="file" id="pdfInput" accept=".pdf" onchange="handleFileUpload(this.files[0])">
                     </div>
                     <div id="uploadStatus"></div>
+                    
+                    <!-- SELEÇÃO DE CONTRATO APARECE APÓS UPLOAD -->
+                    <div id="selecaoContratoUpload" class="hidden" style="margin-top:16px;">
+                        <div class="form-group">
+                            <label>Selecione o Contrato</label>
+                            <select id="uploadContratoSelect">
+                                <option value="">Carregando contratos...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div id="uploadActions" class="hidden" style="margin-top:16px; display:flex; gap:12px; flex-wrap:wrap;">
-                        <button class="btn-salvar-fatura" onclick="salvarFaturaEditada()">
+                        <button class="btn-salvar-fatura" onclick="salvarFaturaDoUpload()">
                             <i class="fas fa-save"></i> Salvar Fatura
                         </button>
                         <button class="btn btn-outline" onclick="cancelarUpload()">Cancelar</button>
                     </div>
-                    <div id="dadosExtraidosContainer" class="dados-extraidos-container"></div>
                 </div>
             </div>
         </div>
@@ -167,53 +195,57 @@
                 <h3>Novo Contrato de Energia</h3>
                 <button class="modal-close" onclick="fecharModal('modalContrato')">&times;</button>
             </div>
-            <form id="formContrato" onsubmit="salvarContrato(event)">
-                <div class="form-group">
-                    <label>Número do Contrato</label>
-                    <input type="text" id="contratoNumero" placeholder="Número do contrato" required>
-                </div>
-                <div class="form-group">
-                    <label>Concessionária</label>
-                    <input type="text" id="contratoConcessionaria" placeholder="Nome da concessionária" required>
-                </div>
-                <div class="form-group">
-                    <label>Unidade Consumidora</label>
-                    <input type="text" id="contratoUnidade" placeholder="Código da unidade" required>
-                </div>
-                <div class="form-row">
+            <div class="modal-body">
+                <form id="formContrato" onsubmit="salvarContrato(event)">
                     <div class="form-group">
-                        <label>Modalidade Tarifária</label>
-                        <select id="contratoModalidade" required>
-                            <option value="convencional">Convencional</option>
-                            <option value="branca">Branca</option>
-                            <option value="verde">Verde</option>
-                            <option value="azul">Azul</option>
-                        </select>
+                        <label>Número do Contrato *</label>
+                        <input type="text" id="contratoNumero" placeholder="Ex: 123456789" required>
                     </div>
                     <div class="form-group">
-                        <label>Tensão</label>
-                        <select id="contratoTensao" required>
-                            <option value="baixa">Baixa</option>
-                            <option value="media">Média</option>
-                            <option value="alta">Alta</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Data de Início</label>
-                        <input type="date" id="contratoDataInicio" required>
+                        <label>Concessionária *</label>
+                        <input type="text" id="contratoConcessionaria" placeholder="Ex: Enel, Light, etc." required>
                     </div>
                     <div class="form-group">
-                        <label>Data de Fim</label>
-                        <input type="date" id="contratoDataFim">
+                        <label>Unidade Consumidora (UC) *</label>
+                        <input type="text" id="contratoUnidade" placeholder="Código da instalação" required>
                     </div>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="fecharModal('modalContrato')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </div>
-            </form>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Modalidade Tarifária *</label>
+                            <select id="contratoModalidade" required>
+                                <option value="">Selecione</option>
+                                <option value="convencional">Convencional</option>
+                                <option value="branca">Branca</option>
+                                <option value="verde">Verde</option>
+                                <option value="azul">Azul</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tensão *</label>
+                            <select id="contratoTensao" required>
+                                <option value="">Selecione</option>
+                                <option value="baixa">Baixa Tensão</option>
+                                <option value="media">Média Tensão</option>
+                                <option value="alta">Alta Tensão</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data de Início *</label>
+                            <input type="date" id="contratoDataInicio" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Data de Fim</label>
+                            <input type="date" id="contratoDataFim">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" onclick="fecharModal('modalContrato')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Contrato</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -224,116 +256,170 @@
                 <h3>Nova Fatura de Energia</h3>
                 <button class="modal-close" onclick="fecharModal('modalFaturaEnergia')">&times;</button>
             </div>
-            <form id="formFaturaEnergia" onsubmit="salvarFaturaEnergia(event)">
-                <div class="form-group">
-                    <label>Contrato</label>
-                    <select id="faturaEnergiaContrato" required>
-                        <option value="">Selecione um contrato</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Mês Referência</label>
-                    <input type="date" id="faturaEnergiaMes" required>
-                </div>
-                <div class="form-row">
+            <div class="modal-body">
+                <form id="formFaturaEnergia" onsubmit="salvarFaturaEnergia(event)">
                     <div class="form-group">
-                        <label>Data Vencimento</label>
-                        <input type="date" id="faturaEnergiaVencimento" required>
+                        <label>Contrato *</label>
+                        <select id="faturaEnergiaContrato" required>
+                            <option value="">Carregando contratos...</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label>Consumo (kWh)</label>
-                        <input type="number" id="faturaEnergiaConsumo" step="0.01" required>
+                        <label>Mês de Referência *</label>
+                        <input type="date" id="faturaEnergiaMes" required>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Valor Total (R$)</label>
-                    <input type="number" id="faturaEnergiaValor" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label>Bandeira Tarifária</label>
-                    <select id="faturaEnergiaBandeira">
-                        <option value="">Selecione</option>
-                        <option value="verde">Verde</option>
-                        <option value="amarela">Amarela</option>
-                        <option value="vermelha1">Vermelha 1</option>
-                        <option value="vermelha2">Vermelha 2</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-outline" onclick="fecharModal('modalFaturaEnergia')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                </div>
-            </form>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data de Vencimento *</label>
+                            <input type="date" id="faturaEnergiaVencimento" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Consumo (kWh) *</label>
+                            <input type="number" id="faturaEnergiaConsumo" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Total (R$) *</label>
+                        <input type="number" id="faturaEnergiaValor" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Bandeira Tarifária</label>
+                        <select id="faturaEnergiaBandeira">
+                            <option value="">Selecione</option>
+                            <option value="verde">Verde</option>
+                            <option value="amarela">Amarela</option>
+                            <option value="vermelha1">Vermelha 1</option>
+                            <option value="vermelha2">Vermelha 2</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-outline" onclick="fecharModal('modalFaturaEnergia')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Fatura</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/energia.js"></script>
     <script src="js/utils.js"></script>
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO DA API — funciona local e no Render
+        // CONFIGURAÇÃO DA API
         // ============================================
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:8000/api/v1' 
             : '/api/v1';
 
-        let dadosExtraidos = null;
         let faturasCache = [];
+        let contratosCarregados = [];
+
+        // ============================================
+        // AJUDA: PEGAR TOKEN DE FORMA SEGURA
+        // ============================================
+        function getToken() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('⚠️ Você precisa fazer login primeiro!');
+                window.location.href = 'login.html';
+                return null;
+            }
+            return token;
+        }
 
         function getHeaders() {
+            const token = getToken();
+            if (!token) return {};
             return {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             };
         }
 
         // ============================================
-        // CARREGAR CONTRATOS
+        // FUNÇÕES DOS MODAIS — CORRIGIDAS!
+        // ============================================
+        function abrirModalContrato() {
+            document.getElementById('modalContrato').classList.add('open');
+        }
+        function abrirModalFaturaEnergia() {
+            carregarContratosParaSelect();
+            document.getElementById('modalFaturaEnergia').classList.add('open');
+        }
+        function fecharModal(id) {
+            document.getElementById(id).classList.remove('open');
+            document.getElementById('formContrato')?.reset();
+            document.getElementById('formFaturaEnergia')?.reset();
+        }
+
+        // ============================================
+        // CARREGAR CONTRATOS (lista e selects)
         // ============================================
         async function carregarContratos() {
             const container = document.getElementById('contratosList');
             try {
-                const response = await fetch(`${API_URL}/energia/contratos`, { headers: getHeaders() });
-                if (!response.ok) throw new Error('Erro ao carregar contratos');
-                const contratos = await response.json();
-                
-                const select = document.getElementById('faturaEnergiaContrato');
-                select.innerHTML = '<option value="">Selecione um contrato</option>';
-                contratos.forEach(c => {
-                    select.innerHTML += `<option value="${c.id}">${c.numero_contrato} - ${c.concessionaria}</option>`;
+                const res = await fetch(`${API_URL}/energia/contratos?ativo=true`, { 
+                    headers: getHeaders() 
                 });
-
-                if (contratos.length === 0) {
-                    container.innerHTML = '<p class="text-muted">Nenhum contrato cadastrado.</p>';
+                if (res.status === 401 || res.status === 403) {
+                    container.innerHTML = '<p class="text-muted">⚠️ Sessão expirada. Faça login novamente.</p>';
+                    return;
+                }
+                if (!res.ok) throw new Error('Erro ao carregar');
+                contratosCarregados = await res.json();
+                
+                if (!Array.isArray(contratosCarregados) || contratosCarregados.length === 0) {
+                    container.innerHTML = '<p class="text-muted">Nenhum contrato cadastrado. Clique em "Novo Contrato" para começar.</p>';
                 } else {
-                    container.innerHTML = contratos.map(c => `
-                        <div style="border:1px solid #ddd; border-radius:8px; padding:16px;">
-                            <h4 style="margin:0 0 8px 0;">${c.concessionaria}</h4>
-                            <p style="margin:4px 0;"><strong>Nº:</strong> ${c.numero_contrato}</p>
+                    container.innerHTML = contratosCarregados.map(c => `
+                        <div>
+                            <h4 style="margin:0 0 8px 0; color:#e74c3c;">⚡ ${c.concessionaria}</h4>
+                            <p style="margin:4px 0;"><strong>Nº Contrato:</strong> ${c.numero_contrato}</p>
                             <p style="margin:4px 0;"><strong>UC:</strong> ${c.unidade_consumidora}</p>
-                            <p style="margin:4px 0;"><strong>Modalidade:</strong> ${c.modalidade_tarifaria} | ${c.tensão}</p>
-                            <p style="margin:4px 0; color:#666; font-size:13px;">Desde: ${new Date(c.data_inicio).toLocaleDateString()}</p>
+                            <p style="margin:4px 0;"><strong>Modalidade:</strong> ${c.modalidade_tarifaria} | ${c.tensao}</p>
+                            <p style="margin:4px 0; color:#666; font-size:13px;"><strong>Vigência:</strong> ${new Date(c.data_inicio).toLocaleDateString('pt-BR')} ${c.data_fim ? ' a ' + new Date(c.data_fim).toLocaleDateString('pt-BR') : ' (indeterminada)'}</p>
                         </div>
                     `).join('');
                 }
-            } catch (error) {
-                container.innerHTML = `<p class="text-muted">Erro ao carregar contratos.</p>`;
-                console.error(error);
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<p class="text-muted">❌ Erro ao carregar contratos. ${err.message}</p>`;
+            }
+        }
+
+        async function carregarContratosParaSelect() {
+            try {
+                if (!contratosCarregados || contratosCarregados.length === 0) {
+                    await carregarContratos();
+                }
+                const selects = ['faturaEnergiaContrato', 'uploadContratoSelect'];
+                selects.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.innerHTML = '<option value="">Selecione um contrato</option>';
+                    contratosCarregados.forEach(c => {
+                        el.innerHTML += `<option value="${c.id}">${c.numero_contrato} — ${c.concessionaria} (UC: ${c.unidade_consumidora})</option>`;
+                    });
+                });
+            } catch (err) {
+                console.error('Erro ao carregar contratos no select:', err);
             }
         }
 
         // ============================================
-        // SALVAR CONTRATO
+        // SALVAR NOVO CONTRATO
         // ============================================
         async function salvarContrato(event) {
             event.preventDefault();
+            const token = getToken();
+            if (!token) return;
+
             const dados = {
-                numero_contrato: document.getElementById('contratoNumero').value,
-                concessionaria: document.getElementById('contratoConcessionaria').value,
-                unidade_consumidora: document.getElementById('contratoUnidade').value,
+                numero_contrato: document.getElementById('contratoNumero').value.trim(),
+                concessionaria: document.getElementById('contratoConcessionaria').value.trim(),
+                unidade_consumidora: document.getElementById('contratoUnidade').value.trim(),
                 modalidade_tarifaria: document.getElementById('contratoModalidade').value,
                 tensao: document.getElementById('contratoTensao').value,
                 data_inicio: document.getElementById('contratoDataInicio').value,
@@ -348,23 +434,26 @@
                 });
                 const ret = await res.json();
                 if (res.ok) {
-                    alert('✅ Contrato salvo!');
+                    alert('✅ Contrato salvo com sucesso!');
                     fecharModal('modalContrato');
-                    document.getElementById('formContrato').reset();
+                    contratosCarregados = [];
                     carregarContratos();
                 } else {
-                    alert('❌ Erro: ' + (ret.detail || 'Erro ao salvar'));
+                    alert('❌ Erro: ' + (ret.detail || ret.mensagem || 'Não foi possível salvar'));
                 }
-            } catch (e) {
-                alert('❌ Erro de conexão');
+            } catch (err) {
+                alert('❌ Erro de conexão: ' + err.message);
             }
         }
 
         // ============================================
-        // SALVAR FATURA MANUAL (modal)
+        // SALVAR NOVA FATURA
         // ============================================
         async function salvarFaturaEnergia(event) {
             event.preventDefault();
+            const token = getToken();
+            if (!token) return;
+
             const mes = document.getElementById('faturaEnergiaMes').value;
             const dados = {
                 contrato_id: parseInt(document.getElementById('faturaEnergiaContrato').value),
@@ -376,69 +465,10 @@
                 status: 'pendente'
             };
 
-            try {
-                const res = await fetch(`${API_URL}/energia/faturas`, {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify(dados)
-                });
-                const ret = await res.json();
-                if (res.ok) {
-                    alert('✅ Fatura salva!');
-                    fecharModal('modalFaturaEnergia');
-                    document.getElementById('formFaturaEnergia').reset();
-                    carregarFaturas();
-                } else {
-                    alert('❌ Erro: ' + (ret.detail || 'Erro ao salvar'));
-                }
-            } catch (e) {
-                alert('❌ Erro de conexão');
-            }
-        }
-
-        // ============================================
-        // UPLOAD DE PDF — adaptado ao backend existente
-        // ============================================
-        function handleFileUpload(file) {
-            if (!file) return;
-            if (!file.name.toLowerCase().endsWith('.pdf')) {
-                alert('❌ Envie um arquivo PDF.');
+            if (!dados.contrato_id) {
+                alert('⚠️ Selecione um contrato!');
                 return;
             }
-
-            const statusDiv = document.getElementById('uploadStatus');
-            statusDiv.innerHTML = '<div class="status-msg info"><i class="fas fa-spinner fa-spin"></i> Processando PDF... Selecione um contrato abaixo e clique em Salvar.</div>';
-            document.getElementById('uploadActions').classList.add('hidden');
-            document.getElementById('dadosExtraidosContainer').style.display = 'none';
-
-            // Apenas guarda o arquivo — backend ainda não tem rota de OCR
-            alert('📤 Upload de PDF enviado. Selecione o contrato e complete os dados.');
-            document.getElementById('uploadActions').classList.remove('hidden');
-        }
-
-        function cancelarUpload() {
-            document.getElementById('uploadStatus').innerHTML = '';
-            document.getElementById('uploadActions').classList.add('hidden');
-            document.getElementById('dadosExtraidosContainer').style.display = 'none';
-            document.getElementById('pdfInput').value = '';
-            dadosExtraidos = null;
-        }
-
-        // ============================================
-        // SALVAR FATURA EDITADA (do PDF)
-        // ============================================
-        async function salvarFaturaEditada() {
-            const contratoId = prompt('Informe o ID do contrato:');
-            if (!contratoId) return;
-
-            const dados = {
-                contrato_id: parseInt(contratoId),
-                mes_referencia: new Date().toISOString().slice(0,7) + '-01',
-                data_vencimento: new Date(Date.now() + 30*86400000).toISOString().slice(0,10),
-                consumo_kwh: 0,
-                valor_total: 0,
-                status: 'pendente'
-            };
 
             try {
                 const res = await fetch(`${API_URL}/energia/faturas`, {
@@ -449,14 +479,87 @@
                 const ret = await res.json();
                 if (res.ok) {
                     alert('✅ Fatura salva com sucesso!');
+                    fecharModal('modalFaturaEnergia');
+                    carregarFaturas();
+                } else {
+                    alert('❌ Erro: ' + (ret.detail || ret.mensagem || 'Não foi possível salvar'));
+                }
+            } catch (err) {
+                alert('❌ Erro de conexão: ' + err.message);
+            }
+        }
+
+        // ============================================
+        // UPLOAD DE PDF — ENVIADO AO SERVIDOR
+        // ============================================
+        let arquivoPdfSelecionado = null;
+
+        async function handleFileUpload(file) {
+            if (!file) return;
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                alert('❌ Envie um arquivo PDF.');
+                return;
+            }
+
+            arquivoPdfSelecionado = file;
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = `<div class="status-msg sucesso"><i class="fas fa-file-pdf"></i> <strong>Arquivo selecionado:</strong> ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</div>`;
+
+            // Carrega lista de contratos para o select
+            await carregarContratosParaSelect();
+            document.getElementById('selecaoContratoUpload').classList.remove('hidden');
+            document.getElementById('uploadActions').classList.remove('hidden');
+        }
+
+        async function salvarFaturaDoUpload() {
+            const token = getToken();
+            if (!token) return;
+
+            const contratoId = document.getElementById('uploadContratoSelect').value;
+            if (!contratoId) {
+                alert('⚠️ Selecione um contrato primeiro!');
+                return;
+            }
+
+            if (!arquivoPdfSelecionado) {
+                alert('⚠️ Selecione um arquivo PDF!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', arquivoPdfSelecionado);
+            formData.append('contrato_id', contratoId);
+
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<div class="status-msg info"><i class="fas fa-spinner fa-spin"></i> Enviando PDF ao servidor...</div>';
+
+            try {
+                const res = await fetch(`${API_URL}/energia/faturas/upload`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const ret = await res.json();
+                
+                if (res.ok) {
+                    statusDiv.innerHTML = '<div class="status-msg sucesso"><i class="fas fa-check-circle"></i> ✅ PDF enviado com sucesso!</div>';
+                    alert('✅ PDF enviado! A fatura foi registrada.');
                     cancelarUpload();
                     carregarFaturas();
                 } else {
-                    alert('❌ Erro: ' + (ret.detail || 'Erro ao salvar'));
+                    statusDiv.innerHTML = `<div class="status-msg erro"><i class="fas fa-exclamation-circle"></i> Erro: ${ret.detail || ret.mensagem || 'Falha no envio'}</div>`;
                 }
-            } catch (e) {
-                alert('❌ Erro de conexão');
+            } catch (err) {
+                statusDiv.innerHTML = `<div class="status-msg erro"><i class="fas fa-times-circle"></i> Erro de conexão: ${err.message}</div>`;
             }
+        }
+
+        function cancelarUpload() {
+            document.getElementById('uploadStatus').innerHTML = '';
+            document.getElementById('uploadActions').classList.add('hidden');
+            document.getElementById('selecaoContratoUpload').classList.add('hidden');
+            document.getElementById('pdfInput').value = '';
+            arquivoPdfSelecionado = null;
         }
 
         // ============================================
@@ -466,10 +569,20 @@
             const container = document.getElementById('listaFaturas');
             container.innerHTML = '<p class="text-muted text-center"><i class="fas fa-spinner fa-spin"></i> Carregando faturas...</p>';
 
+            const token = getToken();
+            if (!token) {
+                container.innerHTML = '<p class="text-muted text-center">⚠️ Faça login para ver suas faturas.</p>';
+                return;
+            }
+
             try {
-                const response = await fetch(`${API_URL}/energia/faturas`, { headers: getHeaders() });
-                if (!response.ok) throw new Error('Erro ao carregar faturas');
-                const faturas = await response.json();
+                const res = await fetch(`${API_URL}/energia/faturas`, { headers: getHeaders() });
+                if (res.status === 401 || res.status === 403) {
+                    container.innerHTML = '<p class="text-muted text-center">⚠️ Sessão expirada. Faça login novamente.</p>';
+                    return;
+                }
+                if (!res.ok) throw new Error('Erro ao carregar');
+                const faturas = await res.json();
                 faturasCache = faturas;
 
                 if (!Array.isArray(faturas) || faturas.length === 0) {
@@ -503,7 +616,6 @@
                                 <div style="display:flex; gap:4px; flex-wrap:wrap;">
                                     <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); toggleDetalhes(${f.id})" title="Editar">✏️</button>
                                     <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deletarFatura(${f.id})" title="Excluir">🗑️</button>
-                                    <span style="font-size:12px; color:#888; cursor:pointer;">▼</span>
                                 </div>
                             </div>
                             <div class="fatura-detalhes" id="detalhes-${f.id}"></div>
@@ -512,14 +624,14 @@
                 });
 
                 container.innerHTML = html;
-            } catch (error) {
-                console.error(error);
-                container.innerHTML = `<div class="vazio">❌ Erro ao carregar faturas</div>`;
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div class="vazio">❌ Erro ao carregar faturas: ${err.message}</div>`;
             }
         }
 
         // ============================================
-        // ABRIR/FECHAR DETALHES
+        // ABRIR/FECHAR DETALHES PARA EDIÇÃO
         // ============================================
         async function toggleDetalhes(id) {
             const detalhesDiv = document.getElementById(`detalhes-${id}`);
@@ -532,7 +644,7 @@
             if (!fatura) return;
 
             const campos = [
-                { label: 'Mês Ref', key: 'mes_referencia', type: 'date' },
+                { label: 'Mês de Referência', key: 'mes_referencia', type: 'date' },
                 { label: 'Vencimento', key: 'data_vencimento', type: 'date' },
                 { label: 'Consumo (kWh)', key: 'consumo_kwh', type: 'number' },
                 { label: 'Valor Total (R$)', key: 'valor_total', type: 'number' },
@@ -568,6 +680,9 @@
         // ATUALIZAR FATURA
         // ============================================
         async function atualizarFatura(id) {
+            const token = getToken();
+            if (!token) return;
+
             const dados = {
                 mes_referencia: document.getElementById(`edit_mes_referencia_${id}`).value,
                 data_vencimento: document.getElementById(`edit_data_vencimento_${id}`).value,
@@ -578,20 +693,20 @@
             };
 
             try {
-                const response = await fetch(`${API_URL}/energia/faturas/${id}`, {
+                const res = await fetch(`${API_URL}/energia/faturas/${id}`, {
                     method: 'PUT',
                     headers: getHeaders(),
                     body: JSON.stringify(dados)
                 });
-                if (response.ok) {
+                if (res.ok) {
                     alert('✅ Fatura atualizada!');
                     carregarFaturas();
                 } else {
-                    const err = await response.json();
+                    const err = await res.json();
                     alert('❌ Erro: ' + (err.detail || 'Erro ao atualizar'));
                 }
-            } catch (error) {
-                alert('❌ Erro de conexão: ' + error.message);
+            } catch (err) {
+                alert('❌ Erro de conexão: ' + err.message);
             }
         }
 
@@ -600,34 +715,24 @@
         // ============================================
         async function deletarFatura(id) {
             if (!confirm('⚠️ Tem certeza que deseja excluir esta fatura?')) return;
+            const token = getToken();
+            if (!token) return;
+
             try {
-                const response = await fetch(`${API_URL}/energia/faturas/${id}`, {
+                const res = await fetch(`${API_URL}/energia/faturas/${id}`, {
                     method: 'DELETE',
                     headers: getHeaders()
                 });
-                if (response.ok) {
+                if (res.ok) {
                     alert('✅ Fatura excluída!');
                     carregarFaturas();
                 } else {
-                    const err = await response.json();
+                    const err = await res.json();
                     alert('❌ Erro: ' + (err.detail || 'Erro ao excluir'));
                 }
-            } catch (error) {
-                alert('❌ Erro de conexão: ' + error.message);
+            } catch (err) {
+                alert('❌ Erro de conexão: ' + err.message);
             }
-        }
-
-        // ============================================
-        // FUNÇÕES DOS MODAIS (compatibilidade com JS existente)
-        // ============================================
-        function abrirModalContrato() {
-            document.getElementById('modalContrato').classList.add('open');
-        }
-        function abrirModalFaturaEnergia() {
-            document.getElementById('modalFaturaEnergia').classList.add('open');
-        }
-        function fecharModal(id) {
-            document.getElementById(id).classList.remove('open');
         }
 
         // ============================================
@@ -638,9 +743,20 @@
             carregarFaturas();
         });
 
+        // Fecha modal ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('open');
+            }
+        });
+
+        // Fecha com ESC
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                document.querySelectorAll('.fatura-detalhes.open, .modal.open').forEach(el => el.classList.remove('open'));
+                document.querySelectorAll('.modal.open, .fatura-detalhes.open').forEach(el => {
+                    if (el.classList.contains('modal')) el.classList.remove('open');
+                    else el.classList.remove('open');
+                });
             }
         });
     </script>
